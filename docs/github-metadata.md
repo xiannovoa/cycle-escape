@@ -64,6 +64,9 @@ quiet-roads
 
 ### Opción B: GitHub CLI
 
+> El comando usa continuación de línea de bash. En PowerShell, sustituye `\` por un
+> backtick (`` ` ``) al final de cada línea, o ejecútalo en una sola línea.
+
 ```bash
 gh repo edit xiannovoa/cycle-escape \
   --description "Web app para ciclistas de carretera que llegan a una ciudad sin destino: analiza la red OSM, cruza aforos de la Xunta y MITMA y propone corredores de escape hacia carreteras tranquilas. Muestra Escape Point, Escape Time, QuietScore y confianza del dato. Proyecto del Hackathon de la ETSE 2026." \
