@@ -50,10 +50,9 @@ pnpm-debug.log*
 secrets.json
 config.local.*
 
-# --- Datos: los crudos y procesados NO van al repo ---
-# (solo se versionan los .gitkeep para conservar la estructura de carpetas)
-/data/raw/**/*
-!/data/raw/**/.gitkeep
+# --- Datos ---
+# Los conjuntos pequenos de /data/raw SI se versionan (ver data/raw/README.md).
+# Los artefactos derivados de /data/processed NO van al repo.
 /data/processed/**/*
 !/data/processed/**/.gitkeep
 
