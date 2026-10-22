@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from pyproj import Transformer
 
 from app import main
-from app.data_loader import SANTIAGO_CENTER, cache_path, get_graph
+from app.graph_loader import SANTIAGO_CENTER, cache_path, get_graph
 from app.main import create_app
 from app.models import DIRECTIONS, EscapeRoutesResponse
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import networkx as nx
 
-from app.data_loader import SANTIAGO_CENTER, cache_path, get_graph
+from app.graph_loader import SANTIAGO_CENTER, cache_path, get_graph
 from app.escape_point import (
     DEFAULT_THRESHOLDS,
     EscapeThresholds,

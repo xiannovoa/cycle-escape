@@ -9,7 +9,7 @@ import pytest
 from pyproj import Transformer
 from shapely.geometry import LineString
 
-from app.data_loader import SANTIAGO_CENTER, cache_path, get_graph
+from app.graph_loader import SANTIAGO_CENTER, cache_path, get_graph
 from app.models import DIRECTIONS
 from app.routing import (
     MAX_ORIGIN_SNAP_M,

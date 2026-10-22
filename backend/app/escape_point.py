@@ -600,7 +600,7 @@ def rank_escape_routes(
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
-    from app.data_loader import SANTIAGO_CENTER, get_graph
+    from app.graph_loader import SANTIAGO_CENTER, get_graph
     from app.routing import route_candidates
 
     graph = get_graph()

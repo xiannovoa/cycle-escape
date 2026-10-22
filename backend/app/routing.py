@@ -15,7 +15,7 @@ Este módulo devuelve rutas candidatas; detectar el Escape Point y rankearlas
 es responsabilidad de ``escape_point.py``.
 
 El grafo debe estar sin proyectar (EPSG:4326, ``x`` = longitud, ``y`` =
-latitud), tal como lo devuelve ``data_loader.get_graph``.
+latitud), tal como lo devuelve ``graph_loader.get_graph``.
 """
 
 from __future__ import annotations
@@ -429,7 +429,7 @@ def route_candidates(
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
-    from app.data_loader import SANTIAGO_CENTER, get_graph
+    from app.graph_loader import SANTIAGO_CENTER, get_graph
 
     graph = get_graph()
     routes = route_candidates(

@@ -9,8 +9,8 @@ import networkx as nx
 import osmnx as ox
 import pytest
 
-from app import data_loader
-from app.data_loader import (
+from app import graph_loader
+from app.graph_loader import (
     CACHE_VERSION,
     SANTIAGO_CENTER,
     GraphUnavailableError,
@@ -142,7 +142,7 @@ def test_get_graph_uses_cache_without_network(tmp_path, monkeypatch) -> None:
     def explode(*args, **kwargs):
         raise AssertionError("no debería descargar si hay caché")
 
-    monkeypatch.setattr(data_loader, "_download_graph", explode)
+    monkeypatch.setattr(graph_loader, "_download_graph", explode)
 
     loaded = get_graph(radius_m=600, cache_dir=tmp_path)
 
@@ -156,7 +156,7 @@ def test_get_graph_raises_when_no_cache_and_download_fails(
     def fail(*args, **kwargs):
         raise GraphUnavailableError("sin red")
 
-    monkeypatch.setattr(data_loader, "_download_graph", fail)
+    monkeypatch.setattr(graph_loader, "_download_graph", fail)
 
     with pytest.raises(GraphUnavailableError):
         get_graph(radius_m=600, cache_dir=tmp_path)

@@ -27,7 +27,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.data_loader import cache_path, get_graph
+from app.graph_loader import cache_path, get_graph
 from app.escape_point import EscapeRouteResult, rank_escape_routes
 from app.models import (
     SCHEMA_VERSION,
@@ -288,7 +288,7 @@ def _try_load_graph(app: FastAPI) -> None:
     if not path.exists():
         app.state.graph_error = f"no hay caché de grafo en {path}"
         logger.warning(
-            "Grafo no cacheado (%s). Ejecuta: python -m app.data_loader", path
+            "Grafo no cacheado (%s). Ejecuta: python -m app.graph_loader", path
         )
         return
 
