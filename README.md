@@ -132,9 +132,12 @@ los aforos.
   nombre mediante geocodificación de Nominatim (OpenStreetMap). Santiago por defecto.
 - Perfil de bicicleta de carretera con asfalto fijado por defecto.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
-- Aversión al tráfico (baja / media / alta).
+- Aversión al tráfico (baja / media / alta): modula el coste del routing, de modo que
+  una aversión alta acepta rodeos para evitar ejes estresantes.
 - Prioridad continua `λ`: 0 = salida directa, 1 = salida tranquila. Pondera la
-  importancia del componente de tráfico en el ranking.
+  importancia del componente de tráfico en el ranking final.
+- Superficie (`asphalt` / `mixed` / `any`): se acepta en el contrato; en v0.1 el Road
+  Stress ya penaliza las superficies no asfaltadas, pero no se usa como filtro duro.
 
 ### Salidas
 
@@ -173,7 +176,7 @@ routing. El significado (rojo = peor) no debe invertirse.
 
 ---
 
-## Stack previsto
+## Stack
 
 | Capa | Tecnología |
 |---|---|
@@ -206,10 +209,12 @@ cycle-escape/
 
 ## API
 
-El contrato detallado está en [`docs/api-contract.md`](docs/api-contract.md).
+El contrato detallado está en [`docs/api-contract.md`](docs/api-contract.md) y está
+implementado en `backend/app/models.py`.
 
-Resumen: el frontend enviará el origen y las preferencias, y recibirá una ruta recomendada
-más alternativas, con geometría GeoJSON, Escape Point, métricas y metadatos de tráfico.
+Resumen: el frontend envía el origen y las preferencias, y recibe una ruta recomendada más
+alternativas, con geometría GeoJSON, Escape Point, métricas y metadatos de tráfico. La API
+expone `GET /api/health` para diagnóstico y `POST /api/escape-routes` para la búsqueda.
 
 Estos nombres de campo son **compartidos y están congelados** hasta que el equipo acuerde
 un cambio:
@@ -218,8 +223,9 @@ un cambio:
 `road_stress`, `quiet_score`, `escape_point`, `escape_time_min`,
 `distance_to_escape_km`.
 
-El frontend funciona desde el primer día con un mock que respeta esta forma, de modo que no
-depende de que el backend esté terminado.
+El frontend funciona con un mock que respeta esta forma y también con la API real. Si el
+backend no responde o tarda demasiado, `frontend/src/api.ts` cae automáticamente al mock y
+lo indica en pantalla.
 
 ---
 
@@ -244,13 +250,15 @@ npm run dev
 La aplicación abre en `http://127.0.0.1:5173`.
 
 Por defecto `VITE_USE_MOCK=true`: la interfaz funciona con datos simulados y **no necesita
-backend**. Para usar la API real:
+backend**. Para la demo con datos reales:
 
 1. Cambia `VITE_USE_MOCK=false` en `frontend/.env`.
 2. Arranca el backend en el puerto 8000 (Vite hace proxy de `/api`).
-3. Si el backend está en otra URL, define `VITE_API_URL=http://host:puerto`.
+3. Comprueba que `GET /api/health` responde `ok`.
+4. Si el backend está en otra URL, define `VITE_API_URL=http://host:puerto`.
 
-Si la API falla, el frontend cae automáticamente al mock y lo indica en pantalla.
+Si la API falla, el frontend cae automáticamente al mock y lo indica en pantalla. Ese
+fallback es el plan B de la demo: conviene probarlo antes de presentar.
 
 ### Backend
 
@@ -262,18 +270,49 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r backend/requirements.txt
+```
+
+Antes de arrancar la API hay que tener el grafo de OSM cacheado. La primera vez se descarga
+un área de 12 km alrededor de Santiago; después se reutiliza la caché local:
+
+```bash
+cd backend
+python -m app.graph_loader
+cd ..
+```
+
+La caché se guarda en `tmp/osm/` y **no se versiona**. Para una demo sin sorpresas, hay que
+precalentarla en la máquina de presentación con antelación y no depender del wifi del evento.
+
+```bash
 uvicorn app.main:app --reload --app-dir backend
 ```
 
-> El backend está en construcción. `requirements.txt` y los módulos de `backend/app/` se
-> completarán durante el hackathon.
+La API queda en `http://127.0.0.1:8000`. Si no hay caché de grafo, arranca en estado
+`degraded` y `POST /api/escape-routes` responde `503 DATA_NOT_READY`; no intenta una
+descarga larga durante la demo.
+
+### Pruebas
+
+```bash
+.venv\Scripts\python.exe -m pytest -q
+
+cd frontend
+npm run build
+```
+
+Los tests de integración con Santiago se ejecutan si existe la caché de grafo y la capa
+`data/raw/imd_santiago.geojson`. La descarga real de Overpass está desactivada por defecto
+(`RUN_OSM_TESTS=1` para activarla).
 
 ### Datos
 
 Los GeoJSON de Xunta y MITMA ya están versionados en `data/raw/` (conjuntos pequeños).
-La capa unificada `data/raw/imd_santiago.geojson` se regenera con
-`python data/build_imd_dataset.py`. Los artefactos derivados deben ir a
-`data/processed/`, que no se versiona.
+La capa unificada `data/raw/imd_santiago.geojson` contiene **39 tramos** y se regenera con
+`python data/build_imd_dataset.py`. El backend la cruza con las aristas de OSM y escribe
+`imd`, `heavy_pct`, `traffic_source`, `traffic_year` y `traffic_confidence` solo cuando hay
+un match geométrico fiable. Los artefactos derivados deben ir a `data/processed/`, que no
+se versiona.
 
 ---
 
@@ -294,8 +333,8 @@ Las reglas de colaboración y los límites de cada área están en [`AGENTS.md`]
 Incluido:
 
 - selección de origen en Santiago de Compostela;
-- preferencias básicas de velocidad, aversión y superficie;
-- entre 3 y 5 corredores candidatos;
+- preferencias de velocidad, aversión, prioridad y superficie;
+- hasta 7 corredores candidatos (5 por defecto);
 - ruta recomendada + alternativas;
 - Escape Point y métricas;
 - coloreado por Road Stress;
@@ -318,26 +357,27 @@ Fuera de alcance:
 | Elemento | Estado |
 |---|---|
 | Estructura del repositorio | Listo |
-| Documentación compartida | Redactada; pendiente de revisión del equipo |
-| Contrato de API | Propuesta, pendiente de validación |
-| Backend | Pendiente |
-| Frontend | MVP con mock listo; integración preparada |
+| Documentación compartida | Actualizada al estado v0.1; revisión final antes de la demo |
+| Contrato de API | v0.1 implementado y cubierto por tests |
+| Backend | Listo: grafo OSM, matching de tráfico, routing, Escape Point y API |
+| Frontend | MVP integrado con la API real y con fallback a mock |
 | Mock de respuesta | Listo (5 corredores de Santiago) |
-| Demo | Pendiente de ensayo |
+| Datos de tráfico | 39 tramos versionados; matching real sobre la caché de Santiago |
+| Demo | Guion actualizado; pendiente de ensayo final |
 
 ### Próximos pasos
 
-1. Validar el contrato de API entre los tres desarrolladores.
-2. Implementar el pipeline de datos y el grafo OSM.
-3. Integrar el frontend con la respuesta real del backend.
-4. Ensayar la demo con [`docs/demo-script.md`](docs/demo-script.md).
+1. Ensayar la demo con [`docs/demo-script.md`](docs/demo-script.md) y grabar el plan B.
+2. Ampliar la cobertura de aforos y revisar los tramos sin match.
+3. Aplicar `surface_preference` en el coste de routing y desacoplar la ciudad de demo.
+4. Mantener `main` en estado demostrable y etiquetar la versión de demo.
 
 ---
 
 ## Documentación
 
 - [`AGENTS.md`](AGENTS.md): reglas de colaboración, propiedad del código y convenciones.
-- [`docs/api-contract.md`](docs/api-contract.md): propuesta de contrato HTTP/JSON.
+- [`docs/api-contract.md`](docs/api-contract.md): contrato HTTP/JSON v0.1 implementado.
 - [`docs/data-normalization.md`](docs/data-normalization.md): normalización, confianza y matching de los datos de tráfico.
 - [`docs/demo-script.md`](docs/demo-script.md): guion y plan B para la presentación.
 
@@ -351,4 +391,6 @@ Fuera de alcance:
   con menor confianza.
 - Los datos de MITMA usados son principalmente de 2022 y los de la Xunta de 2025; la
   antigüedad se muestra siempre que sea posible.
-- La demo se limita a Santiago de Compostela, aunque el diseño no dependa de esa ciudad.
+- La demo se limita a Santiago de Compostela: el motor acepta coordenadas, pero la caché de
+  grafo y los datos preparados son de Santiago. Un origen fuera de cobertura devuelve
+  `OUTSIDE_COVERAGE`.

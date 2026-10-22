@@ -1,6 +1,11 @@
+> **Documento histórico (22-10-2026).** Se conserva como contexto de la preparación de los
+> datos. El nombre de trabajo era **FÓRA**; el proyecto actual es **Cycle Escape**. El
+> estado vigente está en [`../README.md`](../README.md),
+> [`data-normalization.md`](data-normalization.md) y [`api-contract.md`](api-contract.md).
+
 Eres un asistente que me ayuda en un hackatón de IA (22-10-2026). Te doy el contexto completo de los datos que ya he preparado, para que continúes a partir de aquí sin repetir trabajo.
 
-## El proyecto: FÓRA
+## El proyecto: FÓRA (hoy Cycle Escape)
 
 FÓRA es una web para ciclistas de carretera que visitan Santiago de Compostela. Desde un punto de salida en Santiago, compara los corredores de salida de la ciudad y calcula para cada uno:
 - **Escape Point**: el punto donde el ciclista sale por fin a carreteras tranquilas (poco tráfico).
@@ -55,5 +60,15 @@ Como el MITMA no da geometría descargable, la geometría de sus tramos se gener
 - `tramos_a_geojson.py` + `tramos_mitma.csv` + `calibracion_pk.csv`: generan `mitma_santiago.geojson` (necesita shapely y pyproj).
 - `unir_imd.py`: une Xunta y MITMA en `imd_santiago.geojson`, con campos comunes y el Nivel.
 
-## Lo siguiente
-Usar `imd_santiago.geojson` en FÓRA: cruzar sus tramos con las aristas del grafo de OSMnx (por ejemplo, asignando a cada arista la IMD del tramo más cercano a menos de unos 30 m y con la misma ref), y calcular para cada corredor el Escape Point (el primer punto de la ruta a partir del cual el ciclista circula por vías de nivel "tranquila") y el Escape Time.
+## Lo siguiente (histórico)
+
+La propuesta inicial era cruzar `imd_santiago.geojson` con las aristas del grafo de OSMnx
+y calcular el Escape Point y el Escape Time. **Ya está implementado**:
+
+- matching por `ref` y distancia ≤ 30 m en `backend/app/traffic_enrichment.py`;
+- Road Stress y QuietScore en `backend/app/scoring.py`;
+- detección del Escape Point y ranking en `backend/app/escape_point.py`;
+- API en `backend/app/main.py`.
+
+El resultado actual del matching y las limitaciones están documentados en
+[`data-normalization.md`](data-normalization.md).

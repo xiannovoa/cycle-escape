@@ -90,9 +90,10 @@ romper al consumidor.
 - Las distancias van en kilómetros y los tiempos en minutos, tal como indican los nombres.
 - El contrato se versiona con `schema_version` en la respuesta.
 
-La propuesta completa, con ejemplos y preguntas abiertas, está en
-[`docs/api-contract.md`](docs/api-contract.md). Hasta que Xián la valide, es una propuesta:
-el frontend puede construir el mock con esa forma, pero no debe asumir que es definitiva.
+El contrato completo, con ejemplos y decisiones cerradas, está en
+[`docs/api-contract.md`](docs/api-contract.md). La v0.1 está implementada en
+`backend/app/models.py` y cubierta por tests; los cambios deben ser aditivos y, a ser
+posible, opcionales para no romper a los consumidores.
 
 ---
 
@@ -104,7 +105,7 @@ sin router si no hace falta.
 Reglas:
 
 - El frontend debe funcionar con datos mock desde el principio.
-- `api/client.ts` intenta el backend y cae al mock si falla o no está disponible.
+- `frontend/src/api.ts` intenta el backend y cae al mock si falla o no está disponible.
 - Los datos mock viven en el repositorio y respetan el contrato.
 - Un único helper convierte GeoJSON `[lon, lat]` a Leaflet `[lat, lng]`.
 - El color de cada segmento se deriva de `road_stress` con una función centralizada; no se
@@ -217,7 +218,7 @@ Para considerar una tarea terminada:
 - El cambio está dentro del ámbito asignado.
 - Compila / arranca sin errores.
 - Respeta el contrato y los nombres de campo.
-- El frontend sigue funcionando con el mock si el backend no está listo.
+- El frontend sigue funcionando con el mock si el backend falla o no está disponible.
 - No se han añadido secretos ni datos voluminosos.
 - La demo se puede explicar en una frase.
 - Si aplica, la documentación se ha actualizado.
@@ -232,20 +233,41 @@ Para considerar una tarea terminada:
 - [ ] Los colores de estrés y la leyenda son coherentes.
 - [ ] Se muestran Escape Time, distancia y QuietScore.
 - [ ] Se muestran fuente, año y confianza de los datos.
-- [ ] El fallback a mock está probado.
+- [ ] `GET /api/health` responde `ok` y la caché de grafo está precalentada.
+- [ ] Se ha probado el modo live (`VITE_USE_MOCK=false`) y el fallback a mock.
+- [ ] Hay captura o vídeo de respaldo por si falla la red.
 - [ ] El guion de demo se ha ensayado al menos una vez.
 
 ---
 
-## 13. Decisiones abiertas
+## 13. Decisiones cerradas y pendientes
 
-Pendientes de validar entre Javi, Eva y Xián:
+### Cerradas para v0.1
 
-- Ruta final del endpoint (`POST /api/escape-routes` es la propuesta actual).
-- Umbrales exactos de `traffic_confidence`.
-- Si `quiet_score` se expone también por segmento o solo por ruta.
-- Número máximo de candidatos devueltos.
-- Si el backend devuelve etiquetas legibles o el frontend las compone.
-- Estrategia de geocodificación (el MVP puede usar solo clic en el mapa y coordenadas).
+Implementadas y cubiertas por tests:
+
+- **Endpoint final:** `POST /api/escape-routes`; diagnóstico en `GET /api/health`.
+- **Umbrales de `traffic_confidence`:**
+  - Xunta con año real ≤ 3 años respecto al actual → `high`.
+  - Xunta más antiguo o sin año → `medium`.
+  - MITMA (aforo de 2022 en el MVP) → `medium`.
+  - `osm_estimate` → `low`.
+  - Confianza agregada de ruta: `high` si `measured_share >= 0.75` y todos los tramos
+    medidos son `high`; `low` si no hay ningún tramo medido; `medium` en el resto.
+- **`quiet_score`:** se expone por ruta, calculado sobre la red posterior al Escape
+  Point. El contrato de segmento expone `road_stress`, no `quiet_score` por tramo.
+- **Número de candidatos:** 5 por defecto, máximo 7.
+- **Etiquetas:** el backend compone `label` a partir de la dirección y del nombre del
+  Escape Point. El frontend no recalcula el ranking.
+- **Geocodificación:** en el cliente con Nominatim; el backend solo recibe coordenadas.
+- **Prioridad:** `traffic_lambda` es continuo; `route_preference` se mantiene por
+  compatibilidad con clientes antiguos.
+
+### Pendientes
+
+- Aplicar `surface_preference` como preferencia o filtro de coste en el routing.
+- Desacoplar por completo la ciudad de demo y soportar varias cachés de grafo.
+- Ampliar la cobertura de aforos y revisar los umbrales con ciclistas locales.
+- Decidir si `quiet_score` se expone también por segmento.
 
 Cuando se cierre una decisión, actualizar este documento y el contrato en el mismo PR.
