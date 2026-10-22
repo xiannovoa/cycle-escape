@@ -231,11 +231,21 @@ depende de que el backend esté terminado.
 ```bash
 cd frontend
 npm install
+copy .env.example .env   # Windows
+# cp .env.example .env   # macOS / Linux
 npm run dev
 ```
 
-> El scaffold del frontend se añadirá en la primera tarea de interfaz. Hasta entonces esta
-> sección describe los comandos previstos.
+La aplicación abre en `http://127.0.0.1:5173`.
+
+Por defecto `VITE_USE_MOCK=true`: la interfaz funciona con datos simulados y **no necesita
+backend**. Para usar la API real:
+
+1. Cambia `VITE_USE_MOCK=false` en `frontend/.env`.
+2. Arranca el backend en el puerto 8000 (Vite hace proxy de `/api`).
+3. Si el backend está en otra URL, define `VITE_API_URL=http://host:puerto`.
+
+Si la API falla, el frontend cae automáticamente al mock y lo indica en pantalla.
 
 ### Backend
 
@@ -305,17 +315,16 @@ Fuera de alcance:
 | Documentación compartida | Redactada; pendiente de revisión del equipo |
 | Contrato de API | Propuesta, pendiente de validación |
 | Backend | Pendiente |
-| Frontend | Pendiente |
-| Mock de respuesta | Pendiente |
-| Demo | Pendiente |
+| Frontend | MVP con mock listo; integración preparada |
+| Mock de respuesta | Listo (5 corredores de Santiago) |
+| Demo | Pendiente de ensayo |
 
 ### Próximos pasos
 
 1. Validar el contrato de API entre los tres desarrolladores.
-2. Crear el scaffold del frontend y el mock de Santiago.
-3. Implementar el pipeline de datos y el grafo OSM.
-4. Integrar frontend y backend.
-5. Ensayar la demo con [`docs/demo-script.md`](docs/demo-script.md).
+2. Implementar el pipeline de datos y el grafo OSM.
+3. Integrar el frontend con la respuesta real del backend.
+4. Ensayar la demo con [`docs/demo-script.md`](docs/demo-script.md).
 
 ---
 
