@@ -48,9 +48,9 @@ Los kilómetros posteriores al Escape Point también deben mantenerse razonablem
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
 
-En el MVP se exige que el punto esté a **más de 1,5 km del origen** y que los siguientes
-**5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
-trazado con estrés ≤ 30** y fuera de una zona urbana densa.
+En el MVP se exige que los siguientes **5 km** mantengan un QuietScore medio de al menos
+**80**, con al menos el **80% del trazado con estrés ≤ 30** y fuera de una zona urbana
+densa.
 
 ### Escape Time
 

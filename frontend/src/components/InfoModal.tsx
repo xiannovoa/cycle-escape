@@ -53,10 +53,10 @@ export function InfoModal({ open, onClose }: InfoModalProps) {
           <article>
             <h3>¿Qué es el Escape Point?</h3>
             <p>
-              Es el primer punto a más de 1,5 km del origen desde el que los siguientes
-              5 km mantienen un QuietScore medio de al menos 80 y un 80% del trazado con
-              estrés igual o inferior a 30, fuera de una zona urbana densa. Si un corredor
-              no cumple estos criterios, no se muestra como salida.
+              Es el primer punto desde el que los siguientes 5 km mantienen un
+              QuietScore medio de al menos 80 y un 80% del trazado con estrés igual o
+              inferior a 30, fuera de una zona urbana densa. Si un corredor no cumple
+              estos criterios, no se muestra como salida.
             </p>
           </article>
 
