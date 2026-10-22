@@ -70,7 +70,7 @@ Si solo presenta una persona, el guion sigue siendo válido: se narran las tres 
 1. Hacer clic en el centro de Santiago o escribir una calle en el buscador de origen.
 2. Ajustar velocidad media a 22 km/h.
 3. Subir la aversión al tráfico a "Alta".
-4. Mover la prioridad hacia "Tranquila" (aproximadamente 0.65).
+4. Mover la prioridad hacia "Menor tráfico" (aproximadamente 0.65).
 5. Pulsar "Buscar salidas".
 
 Mientras carga:

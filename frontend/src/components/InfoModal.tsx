@@ -58,18 +58,44 @@ export function InfoModal({ open, onClose }: InfoModalProps) {
             </p>
             <ul>
               <li>
-                <strong>Alta:</strong> la mayor parte del trazado tiene aforo oficial
-                reciente y bien emparejado.
+                <strong>Alta:</strong> al menos un 30% del trazado tiene aforo reciente y
+                el resto cuenta con una buena base de atributos OSM.
               </li>
               <li>
-                <strong>Media:</strong> cobertura parcial, datos de varios años o un
-                emparejamiento menos preciso.
+                <strong>Media:</strong> cobertura de aforo parcial o antigua, o
+                estimaciones OSM con atributos suficientes.
               </li>
               <li>
-                <strong>Baja:</strong> predominan tramos sin aforo, estimados a partir de
-                atributos de OpenStreetMap.
+                <strong>Baja:</strong> no hay aforo medido y la información OSM es escasa.
               </li>
             </ul>
+          </article>
+
+          <article>
+            <h3>¿Qué es la aversión al tráfico?</h3>
+            <p>
+              Mide cuánto quieres evitar circular con coches. Cuanto más alta, más
+              penaliza el cálculo de la ruta las vías con Road Stress alto, aunque eso
+              suponga un rodeo para encontrar calles más tranquilas.
+            </p>
+          </article>
+
+          <article>
+            <h3>¿Qué es la prioridad?</h3>
+            <p>
+              Equilibra <strong>salida directa</strong> y <strong>menor tráfico</strong> al
+              elegir el corredor recomendado. A la izquierda prima el tiempo de salida; a
+              la derecha, el QuietScore del corredor.
+            </p>
+          </article>
+
+          <article>
+            <h3>¿Qué es el QuietScore?</h3>
+            <p>
+              Es una puntuación de 0 a 100 derivada del Road Stress. Un valor alto indica
+              un entorno más tranquilo. Se calcula sobre la red posterior al Escape Point
+              y no es una medida de seguridad.
+            </p>
           </article>
 
           <article>

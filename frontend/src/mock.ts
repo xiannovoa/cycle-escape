@@ -8,7 +8,7 @@ import type {
   TrafficConfidence,
   TrafficSource,
 } from './types';
-import { lineDistanceKm } from './utils';
+import { lineDistanceKm, resolveRouteConfidence } from './utils';
 
 interface SegmentSpec {
   start: number;
@@ -357,12 +357,7 @@ function buildRoute(
   );
   const sources = Array.from(new Set(segments.map((segment) => segment.traffic_source)));
 
-  const confidence: TrafficConfidence =
-    measuredShare >= 0.7 && years.every((year) => year >= 2023)
-      ? 'high'
-      : measuredShare >= 0.35
-        ? 'medium'
-        : 'low';
+  const confidence = resolveRouteConfidence(measuredShare, years, segments, 'low');
 
   const avgStress =
     totalKm > 0

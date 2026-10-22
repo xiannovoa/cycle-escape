@@ -266,6 +266,9 @@ Implementadas y cubiertas por tests:
 ### Pendientes
 
 - Aplicar `surface_preference` como preferencia o filtro de coste en el routing.
+- Unificar la política de confianza: el backend agrega con `measured_share >= 0.75` y
+  todos los tramos `high`; el frontend puede elevar el nivel mostrado con un 30 % de
+  aforo reciente (PR #7). Debe quedar una sola fuente de verdad.
 - Desacoplar por completo la ciudad de demo y soportar varias cachés de grafo.
 - Ampliar la cobertura de aforos y revisar los umbrales con ciclistas locales.
 - Decidir si `quiet_score` se expone también por segmento.

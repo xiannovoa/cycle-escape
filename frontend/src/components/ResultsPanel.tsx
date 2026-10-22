@@ -29,9 +29,9 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
       <details className="confidence-note">
         <summary>¿Cómo se calcula la confianza?</summary>
         <p>
-          Combina la proporción del trazado con aforo oficial y la antigüedad del dato.
-          Alta: cobertura amplia y reciente. Media: parcial o antigua. Baja: predominan
-          los tramos estimados con OpenStreetMap.
+          Combina la cobertura de aforo reciente con la calidad de los datos OSM. Alta:
+          al menos un 30% del trazado con aforo reciente. Media: cobertura parcial, datos
+          antiguos o buena base OSM. Baja: sin aforo y con información OSM escasa.
         </p>
       </details>
 

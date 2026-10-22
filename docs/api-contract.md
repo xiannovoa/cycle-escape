@@ -255,7 +255,8 @@ Reglas de datos:
 | `medium` | Xunta más antiguo o sin año; MITMA (aforo de 2022 en el MVP) |
 | `low` | Sin aforo; Road Stress estimado solo con atributos OSM |
 
-Confianza agregada de la ruta (`traffic_summary.confidence`):
+Confianza agregada de la ruta (`traffic_summary.confidence`) tal como la devuelve el
+backend:
 
 | Valor | Criterio |
 |---|---|
@@ -263,8 +264,13 @@ Confianza agregada de la ruta (`traffic_summary.confidence`):
 | `medium` | Hay algún tramo medido, pero no se cumple `high` |
 | `low` | `measured_share == 0`: toda la ruta es `osm_estimate` |
 
-La UI solo necesita los tres niveles y su explicación; no debe inferir precisión que los
-datos no tienen.
+> **Nota de implementación (pendiente de unificar):** el frontend aplica además una
+> política de presentación en `frontend/src/utils.ts` que puede elevar el nivel mostrado
+> si hay al menos un 30 % de trazado con aforo reciente. Es una decisión de producto
+> adoptada en la PR #7 y todavía no está alineada con la respuesta del backend; hasta
+> unificarla, el contrato describe la política del backend y la UI puede mostrar un nivel
+> superior. La UI solo muestra los tres niveles y su explicación; no debe inferir
+> precisión que los datos no tienen.
 
 ---
 

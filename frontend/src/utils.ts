@@ -1,5 +1,6 @@
 import type {
   LineStringGeometry,
+  RouteSegment,
   TrafficConfidence,
   TrafficSource,
 } from './types';
@@ -58,6 +59,43 @@ export function confidenceLabel(confidence: TrafficConfidence): string {
     case 'low':
       return 'baja';
   }
+}
+
+/** Un 30% de trazado medido reciente ya basta para confianza alta. */
+export const CONFIDENCE_HIGH_MEASURED_SHARE = 0.3;
+
+/** Con al menos un 40% de tramos OSM con buenos atributos, la confianza sube a media. */
+export const CONFIDENCE_OSM_RICH_SHARE = 0.4;
+
+/**
+ * Agrega la confianza de una ruta combinando cobertura medida y calidad OSM.
+ * Se aplica tanto al mock como a la respuesta del backend para mantener una
+ * política de presentación coherente.
+ */
+export function resolveRouteConfidence(
+  measuredShare: number,
+  years: number[],
+  segments: RouteSegment[],
+  fallback: TrafficConfidence,
+): TrafficConfidence {
+  const hasRecentMeasurement = years.some((year) => year >= 2023);
+  if (measuredShare >= CONFIDENCE_HIGH_MEASURED_SHARE && hasRecentMeasurement) {
+    return 'high';
+  }
+  if (measuredShare > 0) {
+    return 'medium';
+  }
+
+  const richShare =
+    segments.length > 0
+      ? segments.filter((segment) => segment.traffic_confidence !== 'low').length /
+        segments.length
+      : 0;
+  if (richShare >= CONFIDENCE_OSM_RICH_SHARE) {
+    return 'medium';
+  }
+
+  return fallback;
 }
 
 export function escapeHtml(value: string): string {

@@ -100,6 +100,10 @@ fracción de distancia con aforo medido:
 | `medium` | Hay algún tramo medido, pero no se cumple `high` |
 | `low` | `measured_share == 0`: toda la ruta es `osm_estimate` |
 
+> El frontend aplica además una política de presentación (PR #7) que puede elevar el
+> nivel mostrado si hay al menos un 30 % de trazado con aforo reciente. Es una
+> inconsistencia conocida y está anotada como pendiente en `AGENTS.md` §13.
+
 ---
 
 ## 5. Validación

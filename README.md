@@ -134,8 +134,8 @@ los aforos.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
 - Aversión al tráfico (baja / media / alta): modula el coste del routing, de modo que
   una aversión alta acepta rodeos para evitar ejes estresantes.
-- Prioridad continua `λ`: 0 = salida directa, 1 = salida tranquila. Pondera la
-  importancia del componente de tráfico en el ranking final.
+- Prioridad continua: de **salida directa** (0) a **menor tráfico** (1). Pondera el
+  tiempo frente al QuietScore al elegir el corredor recomendado.
 - Superficie (`asphalt` / `mixed` / `any`): se acepta en el contrato; en v0.1 el Road
   Stress ya penaliza las superficies no asfaltadas, pero no se usa como filtro duro.
 
