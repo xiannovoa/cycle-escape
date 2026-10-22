@@ -48,6 +48,10 @@ Los kilómetros posteriores al Escape Point también deben mantenerse razonablem
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
 
+En el MVP se exige que el punto esté a **más de 200 m del origen** y que los siguientes
+**5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
+trazado con estrés ≤ 30** y fuera de una zona urbana densa.
+
 ### Escape Time
 
 Tiempo necesario para llegar desde el origen del usuario hasta el Escape Point, a la
@@ -218,8 +222,8 @@ un cambio:
 `road_stress`, `quiet_score`, `escape_point`, `escape_time_min`,
 `distance_to_escape_km`.
 
-El frontend funciona desde el primer día con un mock que respeta esta forma, de modo que no
-depende de que el backend esté terminado.
+El frontend consume únicamente la API real. No incluye datos de prueba ni fallback a datos
+simulados: si el backend no responde, muestra un error y no inventa resultados.
 
 ---
 
@@ -236,21 +240,20 @@ depende de que el backend esté terminado.
 ```bash
 cd frontend
 npm install
-copy .env.example .env   # Windows
-# cp .env.example .env   # macOS / Linux
 npm run dev
 ```
 
-La aplicación abre en `http://127.0.0.1:5173`.
+La aplicación abre en `http://127.0.0.1:5173` y **necesita el backend en el puerto 8000**.
+Vite hace proxy de `/api` hacia `http://127.0.0.1:8000`.
 
-Por defecto `VITE_USE_MOCK=true`: la interfaz funciona con datos simulados y **no necesita
-backend**. Para usar la API real:
+Si el backend está en otra URL, crea `frontend/.env` con:
 
-1. Cambia `VITE_USE_MOCK=false` en `frontend/.env`.
-2. Arranca el backend en el puerto 8000 (Vite hace proxy de `/api`).
-3. Si el backend está en otra URL, define `VITE_API_URL=http://host:puerto`.
+```env
+VITE_API_URL=http://host:puerto
+```
 
-Si la API falla, el frontend cae automáticamente al mock y lo indica en pantalla.
+Si la API falla o no hay cobertura para el origen, la interfaz muestra un aviso y no usa
+datos simulados.
 
 ### Backend
 
@@ -300,7 +303,7 @@ Incluido:
 - Escape Point y métricas;
 - coloreado por Road Stress;
 - fuente, año y confianza de los datos;
-- fallback a datos mock para la demo.
+- aviso cuando el origen no tiene cobertura o el backend no está disponible.
 
 Fuera de alcance:
 
@@ -320,9 +323,9 @@ Fuera de alcance:
 | Estructura del repositorio | Listo |
 | Documentación compartida | Redactada; pendiente de revisión del equipo |
 | Contrato de API | Propuesta, pendiente de validación |
-| Backend | Pendiente |
-| Frontend | MVP con mock listo; integración preparada |
-| Mock de respuesta | Listo (5 corredores de Santiago) |
+| Backend | En integración (rama de routing) |
+| Frontend | MVP con API real; sin datos de prueba |
+| Datos de prueba | Eliminados |
 | Demo | Pendiente de ensayo |
 
 ### Próximos pasos

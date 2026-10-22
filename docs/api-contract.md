@@ -1,7 +1,7 @@
 # Contrato de API — Propuesta v0.1
 
 > **Estado:** propuesta para validar. No es vinculante hasta que Xián (backend) y Eva
-> (datos) la revisen. El frontend puede construir su mock con esta forma.
+> (datos) la revisen. El frontend consume esta forma directamente.
 >
 > **Objetivo:** fijar una respuesta única que permita al frontend pintar la ruta
 > recomendada, las alternativas, el Escape Point, el coloreado por estrés y los metadatos
@@ -238,20 +238,19 @@ Reglas de datos:
 
 | Valor | Criterio orientativo |
 |---|---|
-| `high` | Al menos un 30% del trazado con aforo reciente y buena base de atributos OSM |
-| `medium` | Cobertura parcial o antigua, o estimaciones OSM con atributos suficientes |
-| `low` | Sin aforo medido y con información OSM escasa |
+| `high` | Más del 2% del trazado con aforo medido |
+| `medium` | Entre el 1% y el 2% del trazado con aforo medido |
+| `low` | Sin aforo medido (0%) |
 
-> La agregación de ruta combina `measured_share`, los años de los aforos y la confianza
-> de los segmentos. Estos umbrales son una política de producto y deben validarse con
-> Eva; la UI solo muestra los tres niveles y su explicación.
+> La agregación de ruta se basa en `measured_share`. Estos umbrales son una política de
+> producto y deben validarse con Eva; la UI muestra los tres niveles y su explicación.
 
 ---
 
 ## 4. Ejemplo completo
 
-> Geometrías y valores **simplificados y ficticios**, solo para construir el mock. No son
-> mediciones reales.
+> Geometrías y valores **simplificados y ficticios**, solo como ejemplo del contrato. No
+> son mediciones reales.
 
 ```json
 {
@@ -510,8 +509,8 @@ Formato estable:
 | 500 | `ROUTING_ERROR` | Fallo interno del grafo o del cálculo |
 | 503 | `DATA_NOT_READY` | Grafo o capas de tráfico sin cargar |
 
-El frontend debe mostrar un mensaje comprensible y ofrecer reintentar o volver al mock en
-la demo.
+El frontend debe mostrar un mensaje comprensible y ofrecer reintentar. No usa datos mock
+ni inventa resultados.
 
 ---
 

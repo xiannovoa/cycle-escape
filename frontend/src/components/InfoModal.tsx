@@ -58,17 +58,25 @@ export function InfoModal({ open, onClose }: InfoModalProps) {
             </p>
             <ul>
               <li>
-                <strong>Alta:</strong> al menos un 30% del trazado tiene aforo reciente y
-                el resto cuenta con una buena base de atributos OSM.
+                <strong>Alta:</strong> más del 2% del trazado tiene aforo medido.
               </li>
               <li>
-                <strong>Media:</strong> cobertura de aforo parcial o antigua, o
-                estimaciones OSM con atributos suficientes.
+                <strong>Media:</strong> entre el 1% y el 2% del trazado tiene aforo.
               </li>
               <li>
-                <strong>Baja:</strong> no hay aforo medido y la información OSM es escasa.
+                <strong>Baja:</strong> no hay aforo medido (0%).
               </li>
             </ul>
+          </article>
+
+          <article>
+            <h3>¿Qué es el Escape Point?</h3>
+            <p>
+              Es el primer punto a más de 200 m del origen desde el que los siguientes
+              5 km mantienen un QuietScore medio de al menos 80 y un 80% del trazado con
+              estrés igual o inferior a 30, fuera de una zona urbana densa. Si un corredor
+              no cumple estos criterios, no se muestra como salida.
+            </p>
           </article>
 
           <article>

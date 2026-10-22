@@ -601,6 +601,49 @@ button {
   color: #8c1d14;
 }
 
+.toast {
+  align-items: center;
+  background: var(--forest-deep);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px 10px 10px 3px;
+  bottom: 24px;
+  box-shadow: 0 14px 36px rgba(4, 24, 17, 0.35);
+  color: #fffdf8;
+  display: flex;
+  font-size: 11.5px;
+  gap: 12px;
+  left: 50%;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 12px 10px 15px;
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 1900;
+}
+
+.toast span {
+  line-height: 1.4;
+}
+
+.toast button {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 0;
+  border-radius: 50%;
+  color: #fffdf8;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 15px;
+  height: 24px;
+  justify-content: center;
+  line-height: 1;
+  width: 24px;
+}
+
+.toast button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* ---------- Results ---------- */
 
 .results {
@@ -1274,94 +1317,101 @@ button {
   border: 0;
 }
 
-.escape-marker {
-  height: 18px;
+.escape-pin {
+  align-items: center;
+  display: flex;
+  height: 20px;
+  justify-content: center;
   position: relative;
-  width: 18px;
+  width: 20px;
 }
 
-.escape-marker__pulse {
-  animation: escape-pulse 2.1s ease-out infinite;
-  background: rgba(215, 243, 106, 0.62);
+.escape-pin.is-selected {
+  height: 26px;
+  width: 26px;
+}
+
+.escape-pin__circle {
+  align-items: center;
+  background: #1f9d55;
+  border: 2px solid #fffdf8;
   border-radius: 50%;
-  height: 34px;
-  left: -8px;
-  position: absolute;
-  top: -8px;
-  width: 34px;
+  box-shadow: 0 2px 6px rgba(10, 42, 32, 0.26);
+  color: #fff;
+  display: flex;
+  font-size: 9px;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  line-height: 1;
+  width: 20px;
 }
 
-.escape-marker__dot {
-  background: var(--lime);
-  border: 3px solid var(--forest-deep);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(10, 42, 32, 0.45);
-  height: 18px;
-  position: relative;
-  width: 18px;
-  z-index: 1;
+.escape-pin.is-selected .escape-pin__circle {
+  background: #168a4a;
+  border-width: 2.5px;
+  box-shadow: 0 3px 10px rgba(10, 42, 32, 0.34);
+  font-size: 12px;
+  height: 26px;
+  width: 26px;
 }
 
-.escape-marker__label {
+.escape-pin__label {
   background: var(--forest-deep);
   border-radius: 6px;
-  box-shadow: 0 5px 14px rgba(10, 42, 32, 0.3);
+  box-shadow: 0 4px 12px rgba(10, 42, 32, 0.28);
   color: #fff;
   display: flex;
   flex-direction: column;
-  left: 24px;
+  left: 30px;
   line-height: 1.15;
-  padding: 5px 9px;
+  padding: 4px 8px;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   white-space: nowrap;
 }
 
-.escape-marker__label strong {
+.escape-pin__label strong {
   color: var(--lime);
-  font-size: 7.5px;
+  font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.escape-marker__label em {
-  font-size: 10.5px;
+.escape-pin__label em {
+  font-size: 10px;
   font-style: normal;
   font-weight: 600;
   margin-top: 1px;
 }
 
-.origin-marker {
-  height: 16px;
+.origin-pin {
+  filter: drop-shadow(0 2px 3px rgba(10, 42, 32, 0.18));
+  height: 28px;
   position: relative;
-  width: 16px;
+  width: 21px;
 }
 
-.origin-marker__dot {
-  background: #fffdf8;
-  border: 4px solid var(--forest);
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(16, 36, 29, 0.35);
-  height: 16px;
-  position: relative;
-  width: 16px;
-  z-index: 1;
+.origin-pin svg {
+  display: block;
+  height: 28px;
+  width: 21px;
 }
 
-.origin-marker__label {
+.origin-pin__label {
   background: #fffdf8;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--forest);
-  font-size: 8.5px;
+  font-size: 7px;
   font-weight: 750;
-  left: 20px;
-  padding: 2px 6px;
+  left: 18px;
+  padding: 1px 4px;
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  white-space: nowrap;
 }
 
 /* ---------- Animation ---------- */
@@ -1489,6 +1539,10 @@ button {
   .info-modal {
     max-height: 90vh;
     padding: 16px 16px 14px;
+  }
+
+  .toast {
+    bottom: 14px;
   }
 }
 

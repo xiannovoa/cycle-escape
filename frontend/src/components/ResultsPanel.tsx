@@ -29,16 +29,14 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
       <details className="confidence-note">
         <summary>¿Cómo se calcula la confianza?</summary>
         <p>
-          Combina la cobertura de aforo reciente con la calidad de los datos OSM. Alta:
-          al menos un 30% del trazado con aforo reciente. Media: cobertura parcial, datos
-          antiguos o buena base OSM. Baja: sin aforo y con información OSM escasa.
+          Sin aforo medido: baja. Cobertura del 1–2%: media. Cobertura superior al 2%:
+          alta.
         </p>
       </details>
 
       <div className="route-list">
         {routes.map((route) => {
           const isSelected = route.id === selectedId;
-          const measured = Math.round(route.traffic_summary.measured_share * 100);
           const years = route.traffic_summary.years.length
             ? route.traffic_summary.years.join(', ')
             : 'sin año';
@@ -110,13 +108,6 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
                 <span className="traffic-meta">
                   {route.traffic_summary.sources.map(sourceLabel).join(' · ')} · {years}
                 </span>
-              </div>
-
-              <div className="measured">
-                <span className="measured__track">
-                  <span style={{ width: `${measured}%` }} />
-                </span>
-                <small>{measured}% del trazado con aforo</small>
               </div>
 
               {route.warnings.length > 0 && (

@@ -85,6 +85,5 @@ export interface EscapeRequest {
 
 export interface SearchResult {
   response: EscapeResponse;
-  source: 'live' | 'mock';
-  warning?: string;
+  source: 'live';
 }
