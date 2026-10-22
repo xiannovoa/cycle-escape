@@ -34,6 +34,10 @@ hacerlo desde el servidor:
 - Backend público con HTTPS y el endpoint `POST /api/escape-routes`.
 - Grafo OSM y datos de tráfico disponibles en el backend desplegado.
 
+> El backend de la demo debe incluir el endpoint `/api/escape-routes`. Si el backend
+> completo está en una rama de routing, despliega esa rama o espera a que se integre en
+> `main`; el frontend no puede sustituirlo con datos de prueba.
+
 ## 1. Publicar el backend primero
 
 El backend no forma parte de este despliegue. Xián debe publicarlo en un servicio con
