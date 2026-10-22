@@ -61,10 +61,10 @@ Si solo presenta una persona, el guion sigue siendo válido: se narran las tres 
 
 **Javi (interacción):**
 
-1. Hacer clic en el centro de Santiago (o usar la posición de demo).
+1. Hacer clic en el centro de Santiago o escribir una calle en el buscador de origen.
 2. Ajustar velocidad media a 22 km/h.
 3. Subir la aversión al tráfico a "Alta".
-4. Mantener preferencia por asfalto.
+4. Mover la prioridad hacia "Tranquila" (aproximadamente 0.65).
 5. Pulsar "Buscar salidas".
 
 Mientras carga:

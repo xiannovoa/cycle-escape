@@ -404,19 +404,10 @@ function buildRoute(
 }
 
 function scoreRoute(route: EscapeRoute, prefs: SearchPreferences): number {
-  const timeWeight =
-    prefs.routePreference === 'direct'
-      ? 1.8
-      : prefs.routePreference === 'quiet'
-        ? 0.15
-        : 1.0;
-  const quietWeightBase =
-    prefs.routePreference === 'direct'
-      ? 0.15
-      : prefs.routePreference === 'quiet'
-        ? 1.5
-        : 0.9;
-  const quietWeight = quietWeightBase * (1 + prefs.trafficAversion * 0.6);
+  // λ = 0 prioriza rapidez; λ = 1 prioriza tranquilidad.
+  const lambda = Math.min(1, Math.max(0, prefs.trafficLambda));
+  const quietWeight = (0.15 + lambda * 2.1) * (1 + prefs.trafficAversion * 0.6);
+  const timeWeight = 2.6 - lambda * 2.45;
   return route.quiet_score * quietWeight - route.escape_time_min * timeWeight;
 }
 

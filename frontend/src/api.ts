@@ -4,6 +4,7 @@ import type {
   EscapeRoute,
   LatLon,
   RouteSegment,
+  RoutePreference,
   SearchPreferences,
   SearchResult,
   TrafficConfidence,
@@ -142,6 +143,15 @@ export async function searchEscapeRoutes(
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 6500);
 
+  // Se mantiene route_preference por compatibilidad con el contrato;
+  // traffic_lambda añade el peso continuo del componente de tráfico.
+  const routePreference: RoutePreference =
+    prefs.trafficLambda < 0.34
+      ? 'direct'
+      : prefs.trafficLambda > 0.66
+        ? 'quiet'
+        : 'balanced';
+
   try {
     const response = await fetch(`${API_BASE}/api/escape-routes`, {
       method: 'POST',
@@ -150,8 +160,9 @@ export async function searchEscapeRoutes(
         origin,
         avg_speed_kmh: prefs.avgSpeedKmh,
         traffic_aversion: prefs.trafficAversion,
+        traffic_lambda: prefs.trafficLambda,
         surface_preference: prefs.surfacePreference,
-        route_preference: prefs.routePreference,
+        route_preference: routePreference,
         max_candidates: 5,
       }),
       signal: controller.signal,
