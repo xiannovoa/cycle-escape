@@ -1,7 +1,7 @@
 # AGENTS.md — Reglas de colaboración
 
 Este documento es la **fuente de verdad** para las personas y los agentes de IA que
-trabajan en Cycle Escape. Si una instrucción contradice este documento, pregunta antes de
+trabajan en Cyclout. Si una instrucción contradice este documento, pregunta antes de
 improvisar.
 
 Contexto de producto, arquitectura y puesta en marcha: [`README.md`](README.md).
@@ -13,7 +13,7 @@ Guion de demo: [`docs/demo-script.md`](docs/demo-script.md).
 
 ## 1. Objetivo del proyecto
 
-Cycle Escape ayuda a un ciclista de carretera que está en una ciudad desconocida a decidir
+Cyclout ayuda a un ciclista de carretera que está en una ciudad desconocida a decidir
 **por qué dirección salir** hacia carreteras tranquilas, sin necesidad de tener un destino.
 
 El MVP se demuestra en Santiago de Compostela. La arquitectura no debe quedar hardcodeada
@@ -35,8 +35,8 @@ fiable, no una arquitectura perfecta.
 4. **Sin medición no significa tráfico cero.** Los tramos sin aforo se estiman con OSM y se
    marcan como estimados, con menor confianza.
 5. **OpenStreetMap es siempre el grafo base** de routing y geometría.
-6. **La demo debe funcionar sin backend terminado**, usando el mock con la misma forma que
-   el contrato.
+6. **La demo usa únicamente la API real.** No hay datos mock ni fallback a datos de prueba;
+   si el backend falla o no hay cobertura, se muestra un aviso.
 
 ---
 
@@ -104,9 +104,12 @@ sin router si no hace falta.
 
 Reglas:
 
-- El frontend debe funcionar con datos mock desde el principio.
-- `frontend/src/api.ts` intenta el backend y cae al mock si falla o no está disponible.
-- Los datos mock viven en el repositorio y respetan el contrato.
+- El frontend consume la API real; no se añaden datos de prueba al repositorio.
+- El perfil del ciclista (velocidad y preferencia de salida) se guarda en `localStorage`.
+  No es autenticación: no hay cuentas, contraseñas ni datos personales en el servidor.
+- Si la API falla, se muestra un error claro; nunca se inventan rutas.
+- Los errores de cobertura (`OUTSIDE_COVERAGE`, `NO_ROUTES_FOUND`) se muestran como aviso
+  temporal para probar otro origen.
 - Un único helper convierte GeoJSON `[lon, lat]` a Leaflet `[lat, lng]`.
 - El color de cada segmento se deriva de `road_stress` con una función centralizada; no se
   repiten umbrales por componentes.
@@ -122,9 +125,9 @@ Estructura de referencia (puede ajustarse sin romper el contrato):
 
 ```text
 frontend/src/
-├── api/          # cliente HTTP + fallback mock
+├── api/          # cliente HTTP de la API real
 ├── components/   # mapa, panel, tarjetas, leyenda
-├── data/         # respuesta mock
+├── data/         # (vacío: sin datos de prueba)
 ├── hooks/        # estado de búsqueda y selección
 ├── types/        # tipos del contrato
 └── utils/        # colores, formato, conversión de coordenadas
@@ -204,7 +207,7 @@ frontend/src/
 4. **No renombres campos compartidos** ni cambies la forma de la respuesta.
 5. **No inventes datos de tráfico** ni presentes estimaciones como mediciones.
 6. **Pregunta** cuando la tarea sea ambigua o afecte a otra área.
-7. **Verifica** que el frontend compila y que la demo funciona con el mock.
+7. **Verifica** que el frontend compila y que funciona contra la API real.
 8. **Reporta** qué has cambiado, qué has probado y qué queda pendiente.
 9. **No commitees** salvo que se pida explícitamente.
 10. **No introduzcas** autenticación, bases de datos, telemetría ni dependencias pesadas.
@@ -218,8 +221,8 @@ Para considerar una tarea terminada:
 - El cambio está dentro del ámbito asignado.
 - Compila / arranca sin errores.
 - Respeta el contrato y los nombres de campo.
-- El frontend sigue funcionando con el mock si el backend falla o no está disponible.
-- No se han añadido secretos ni datos voluminosos.
+- El frontend responde con un aviso claro si el backend no está disponible.
+- No se han añadido secretos, datos de prueba ni datos voluminosos.
 - La demo se puede explicar en una frase.
 - Si aplica, la documentación se ha actualizado.
 
@@ -234,7 +237,8 @@ Para considerar una tarea terminada:
 - [ ] Se muestran Escape Time, distancia y QuietScore.
 - [ ] Se muestran fuente, año y confianza de los datos.
 - [ ] `GET /api/health` responde `ok` y la caché de grafo está precalentada.
-- [ ] Se ha probado el modo live (`VITE_USE_MOCK=false`) y el fallback a mock.
+- [ ] El frontend responde con un aviso claro si el backend no está disponible.
+- [ ] El aviso de “sin datos para esta zona” está probado.
 - [ ] Hay captura o vídeo de respaldo por si falla la red.
 - [ ] El guion de demo se ha ensayado al menos una vez.
 
@@ -267,8 +271,8 @@ Implementadas y cubiertas por tests:
 
 - Aplicar `surface_preference` como preferencia o filtro de coste en el routing.
 - Unificar la política de confianza: el backend agrega con `measured_share >= 0.75` y
-  todos los tramos `high`; el frontend puede elevar el nivel mostrado con un 30 % de
-  aforo reciente (PR #7). Debe quedar una sola fuente de verdad.
+  todos los tramos `high`; el frontend aplica otra política de presentación (0 % → `low`,
+  hasta 2 % → `medium`, más de 2 % → `high`; PR #9). Debe quedar una sola fuente de verdad.
 - Desacoplar por completo la ciudad de demo y soportar varias cachés de grafo.
 - Ampliar la cobertura de aforos y revisar los umbrales con ciclistas locales.
 - Decidir si `quiet_score` se expone también por segmento.

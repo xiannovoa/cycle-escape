@@ -6,7 +6,7 @@
 >
 > **Objetivo:** fijar una respuesta única que permita al frontend pintar la ruta
 > recomendada, las alternativas, el Escape Point, el coloreado por estrés y los metadatos
-> de tráfico. El mock del frontend respeta la misma forma.
+> de tráfico. El frontend consume la API real; no hay datos mock.
 >
 > **Regla:** los campos compartidos no se renombran sin coordinación. Los cambios deben ser
 > aditivos y, a ser posible, opcionales.
@@ -183,7 +183,9 @@ Notas:
   urbano de salida.
 - Si el origen ya está en una zona sostenidamente tranquila, el Escape Point puede quedar
   a 0 km y `escape_time_min` a 0. Es un resultado válido; la UI debería explicarlo como
-  "ya estás en zona tranquila" en lugar de mostrar un cero sin contexto.
+  "ya estás en zona tranquila" en lugar de mostrar un cero sin contexto. En v0.1 el
+  frontend descarta los corredores con Escape Point a menos de 1,5 km del origen y muestra
+  un aviso si no queda ninguno.
 
 ### Segmento
 
@@ -265,19 +267,19 @@ backend:
 | `low` | `measured_share == 0`: toda la ruta es `osm_estimate` |
 
 > **Nota de implementación (pendiente de unificar):** el frontend aplica además una
-> política de presentación en `frontend/src/utils.ts` que puede elevar el nivel mostrado
-> si hay al menos un 30 % de trazado con aforo reciente. Es una decisión de producto
-> adoptada en la PR #7 y todavía no está alineada con la respuesta del backend; hasta
-> unificarla, el contrato describe la política del backend y la UI puede mostrar un nivel
-> superior. La UI solo muestra los tres niveles y su explicación; no debe inferir
+> política de presentación en `frontend/src/utils.ts` distinta de la del backend:
+> 0 % medido → `low`, hasta 2 % → `medium`, más de 2 % → `high`. Es una decisión de
+> producto adoptada en la PR #9 y todavía no está alineada con la respuesta del backend;
+> hasta unificarla, el contrato describe la política del backend y la UI puede mostrar un
+> nivel superior. La UI solo muestra los tres niveles y su explicación; no debe inferir
 > precisión que los datos no tienen.
 
 ---
 
 ## 4. Ejemplo completo
 
-> Geometrías y valores **simplificados y ficticios**, solo para construir el mock. No son
-> mediciones reales.
+> Geometrías y valores **simplificados y ficticios**, solo como ejemplo del contrato. No
+> son mediciones reales.
 
 ```json
 {
@@ -536,8 +538,8 @@ Formato estable:
 | 500 | `ROUTING_ERROR` | Fallo interno del grafo o del cálculo |
 | 503 | `DATA_NOT_READY` | Grafo o capas de tráfico sin cargar |
 
-El frontend debe mostrar un mensaje comprensible y ofrecer reintentar o volver al mock en
-la demo.
+El frontend debe mostrar un mensaje comprensible y ofrecer reintentar. No usa datos mock
+ni inventa resultados.
 
 ---
 

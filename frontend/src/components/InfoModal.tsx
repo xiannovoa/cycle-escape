@@ -36,7 +36,7 @@ export function InfoModal({ open, onClose }: InfoModalProps) {
         <header className="info-modal__head">
           <div>
             <span className="eyebrow">Información</span>
-            <h2 id="info-title">Datos y confianza</h2>
+            <h2 id="info-title">Datos y métricas</h2>
           </div>
           <button
             type="button"
@@ -51,41 +51,22 @@ export function InfoModal({ open, onClose }: InfoModalProps) {
 
         <div className="info-modal__body">
           <article>
-            <h3>¿Qué es la confianza?</h3>
+            <h3>¿Qué es el Escape Point?</h3>
             <p>
-              Indica cuánto respaldo tienen los datos de tráfico de un corredor. No es una
-              medida de seguridad: una confianza alta no garantiza una carretera segura.
-            </p>
-            <ul>
-              <li>
-                <strong>Alta:</strong> al menos un 30% del trazado tiene aforo reciente y
-                el resto cuenta con una buena base de atributos OSM.
-              </li>
-              <li>
-                <strong>Media:</strong> cobertura de aforo parcial o antigua, o
-                estimaciones OSM con atributos suficientes.
-              </li>
-              <li>
-                <strong>Baja:</strong> no hay aforo medido y la información OSM es escasa.
-              </li>
-            </ul>
-          </article>
-
-          <article>
-            <h3>¿Qué es la aversión al tráfico?</h3>
-            <p>
-              Mide cuánto quieres evitar circular con coches. Cuanto más alta, más
-              penaliza el cálculo de la ruta las vías con Road Stress alto, aunque eso
-              suponga un rodeo para encontrar calles más tranquilas.
+              Es el primer punto a más de 1,5 km del origen desde el que los siguientes
+              5 km mantienen un QuietScore medio de al menos 80 y un 80% del trazado con
+              estrés igual o inferior a 30, fuera de una zona urbana densa. Si un corredor
+              no cumple estos criterios, no se muestra como salida.
             </p>
           </article>
 
           <article>
-            <h3>¿Qué es la prioridad?</h3>
+            <h3>¿Qué es la preferencia de salida?</h3>
             <p>
-              Equilibra <strong>salida directa</strong> y <strong>menor tráfico</strong> al
-              elegir el corredor recomendado. A la izquierda prima el tiempo de salida; a
-              la derecha, el QuietScore del corredor.
+              Un único control de <strong>más rápido</strong> a <strong>menor
+              tráfico</strong>. A la izquierda prima el tiempo y se tolera más tráfico; a
+              la derecha prima el QuietScore y se evita más el tráfico. Ajusta a la vez la
+              prioridad y la aversión al tráfico.
             </p>
           </article>
 

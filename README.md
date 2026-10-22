@@ -1,11 +1,11 @@
-# Cycle Escape
+# Cyclout
 
 **Encuentra por dónde escapar de la ciudad en bicicleta de carretera.**
 
 > "Estoy en una ciudad que no conozco. ¿Por qué dirección debería salir para alcanzar
 > carreteras tranquilas y con poco tráfico lo antes posible?"
 
-Cycle Escape es una aplicación web para ciclistas de carretera que visitan una ciudad que
+Cyclout es una aplicación web para ciclistas de carretera que visitan una ciudad que
 no conocen. En lugar de pedir un destino, el usuario indica dónde está y cómo le gusta
 rodar. La aplicación analiza la red viaria de alrededor y propone varios **corredores de
 escape** hacia carreteras tranquilas, explicando cuánto tarda en salir de la ciudad y qué
@@ -15,7 +15,7 @@ El MVP y la demo del hackathon se centran en **Santiago de Compostela**, pero la
 arquitectura no está atada a la ciudad: el origen, los datos de tráfico y la red viaria son
 parámetros de entrada.
 
-> **Hackathon de la ETSE 2026.** Cycle Escape es un proyecto desarrollado para el
+> **Hackathon de la ETSE 2026.** Cyclout es un proyecto desarrollado para el
 > Hackathon de la ETSE 2026.
 
 ---
@@ -50,6 +50,10 @@ No es:
 Los kilómetros posteriores al Escape Point también deben mantenerse razonablemente
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
+
+En el MVP se exige que el punto esté a **más de 1,5 km del origen** y que los siguientes
+**5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
+trazado con estrés ≤ 30** y fuera de una zona urbana densa.
 
 ### Escape Time
 
@@ -129,18 +133,29 @@ los aforos.
 
 ## Experiencia de usuario
 
+### Onboarding y configuración
+
+En la primera visita se configura un **perfil local** con nombre, velocidad media y
+preferencia de salida. Se guarda en `localStorage`; no hay cuentas ni contraseñas. Desde
+**Ajustes** se puede editar en cualquier momento.
+
+La pantalla principal solo pide la posición: con doble clic en el mapa o buscando una
+calle, las rutas se recalculan automáticamente con las preferencias guardadas.
+
 ### Entradas
 
-- Posición de origen: clic en el mapa o búsqueda directa de una calle; se muestra el
+- Posición de origen: doble clic en el mapa o búsqueda directa de una calle; se muestra el
   nombre mediante geocodificación de Nominatim (OpenStreetMap). Santiago por defecto.
 - Perfil de bicicleta de carretera con asfalto fijado por defecto.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
-- Aversión al tráfico (baja / media / alta): modula el coste del routing, de modo que
-  una aversión alta acepta rodeos para evitar ejes estresantes.
-- Prioridad continua: de **salida directa** (0) a **menor tráfico** (1). Pondera el
-  tiempo frente al QuietScore al elegir el corredor recomendado.
-- Superficie (`asphalt` / `mixed` / `any`): se acepta en el contrato; en v0.1 el Road
-  Stress ya penaliza las superficies no asfaltadas, pero no se usa como filtro duro.
+- Perfil local con velocidad y preferencia de salida (0 = más rápido, 1 = menor tráfico).
+  El cliente traduce esa preferencia a `traffic_lambda` y deriva `traffic_aversion` para el
+  backend.
+- Superficie (`asphalt` / `mixed` / `any`): se guarda en el perfil y viaja en el contrato;
+  en v0.1 el Road Stress ya penaliza las superficies no asfaltadas, pero no se usa como
+  filtro duro.
+
+Estos parámetros se configuran en el onboarding o en Ajustes, no en cada consulta.
 
 ### Salidas
 
@@ -159,11 +174,17 @@ Para cada uno:
 - QuietScore después del Escape Point;
 - confianza de los datos;
 - fuente y año de los aforos;
-- avisos cuando un tramo va estimado.
+- avisos cuando un tramo va estimado;
+- etiquetas comparativas como **Más rápida**, **Menos tráfico** o **Mejor confianza**
+  para que el usuario decida el equilibrio que prefiere.
 
 La ruta recomendada se resalta sobre el mapa y el **Escape Point se muestra de forma muy
 destacada**. El resto de alternativas queda visible pero atenuado. La tarjeta recomendada
 se tiñe con el color de la confianza de sus datos de tráfico (verde, ámbar o terracota).
+
+La interfaz es responsive: en móvil el mapa ocupa la parte superior y el panel de origen y
+resultados se presenta como una hoja inferior desplazable. El onboarding y los ajustes se
+adaptan a pantalla completa.
 
 ### Colores de Road Stress
 
@@ -226,9 +247,8 @@ un cambio:
 `road_stress`, `quiet_score`, `escape_point`, `escape_time_min`,
 `distance_to_escape_km`.
 
-El frontend funciona con un mock que respeta esta forma y también con la API real. Si el
-backend no responde o tarda demasiado, `frontend/src/api.ts` cae automáticamente al mock y
-lo indica en pantalla.
+El frontend consume únicamente la API real. No incluye datos de prueba ni fallback a datos
+simulados: si el backend no responde, muestra un error y no inventa resultados.
 
 ---
 
@@ -245,23 +265,21 @@ lo indica en pantalla.
 ```bash
 cd frontend
 npm install
-copy .env.example .env   # Windows
-# cp .env.example .env   # macOS / Linux
 npm run dev
 ```
 
-La aplicación abre en `http://127.0.0.1:5173`.
+La aplicación abre en `http://127.0.0.1:5173` y **necesita el backend en el puerto 8000**.
+Vite hace proxy de `/api` hacia `http://127.0.0.1:8000`.
 
-Por defecto `VITE_USE_MOCK=true`: la interfaz funciona con datos simulados y **no necesita
-backend**. Para la demo con datos reales:
+Si el backend está en otra URL, crea `frontend/.env` con:
 
-1. Cambia `VITE_USE_MOCK=false` en `frontend/.env`.
-2. Arranca el backend en el puerto 8000 (Vite hace proxy de `/api`).
-3. Comprueba que `GET /api/health` responde `ok`.
-4. Si el backend está en otra URL, define `VITE_API_URL=http://host:puerto`.
+```env
+VITE_API_URL=http://host:puerto
+```
 
-Si la API falla, el frontend cae automáticamente al mock y lo indica en pantalla. Ese
-fallback es el plan B de la demo: conviene probarlo antes de presentar.
+Si la API falla o no hay cobertura para el origen, la interfaz muestra un aviso y no usa
+datos simulados. El cliente descarta los corredores cuyo Escape Point queda a menos de
+1,5 km del origen, para no presentar como “salida” un punto que sigue en el centro urbano.
 
 ### Backend
 
@@ -336,13 +354,15 @@ Las reglas de colaboración y los límites de cada área están en [`AGENTS.md`]
 Incluido:
 
 - selección de origen en Santiago de Compostela;
-- preferencias de velocidad, aversión, prioridad y superficie;
-- hasta 7 corredores candidatos (5 por defecto);
+- selección de origen en Santiago de Compostela;
+- perfil local con velocidad, preferencia de salida y superficie;
+- onboarding, ajustes y vista móvil;
+- hasta 5 corredores en la interfaz (el backend admite hasta 7);
 - ruta recomendada + alternativas;
 - Escape Point y métricas;
 - coloreado por Road Stress;
 - fuente, año y confianza de los datos;
-- fallback a datos mock para la demo.
+- aviso cuando el origen no tiene cobertura o el backend no está disponible.
 
 Fuera de alcance:
 
@@ -363,8 +383,7 @@ Fuera de alcance:
 | Documentación compartida | Actualizada al estado v0.1; revisión final antes de la demo |
 | Contrato de API | v0.1 implementado y cubierto por tests |
 | Backend | Listo: grafo OSM, matching de tráfico, routing, Escape Point y API |
-| Frontend | MVP integrado con la API real y con fallback a mock |
-| Mock de respuesta | Listo (5 corredores de Santiago) |
+| Frontend | MVP con API real, onboarding, ajustes y vista móvil; sin datos de prueba |
 | Datos de tráfico | 39 tramos versionados; matching real sobre la caché de Santiago |
 | Demo | Guion actualizado; pendiente de ensayo final |
 
