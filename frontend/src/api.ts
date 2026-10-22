@@ -1,5 +1,4 @@
-import { buildMockResponse } from './mock';
-import { resolveRouteConfidence } from './utils';
+import { haversineKm, resolveRouteConfidence } from './utils';
 import type {
   EscapeResponse,
   EscapeRoute,
@@ -17,8 +16,20 @@ const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').re
   '',
 );
 
-// La demo usa datos de ejemplo salvo que se indique explícitamente lo contrario.
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
+//: Un Escape Point pegado al origen no es una salida real.
+const MIN_ESCAPE_DISTANCE_KM = 0.2;
+
+export class EscapeApiError extends Error {
+  code: string;
+  status: number;
+
+  constructor(code: string, message: string, status = 0) {
+    super(message);
+    this.name = 'EscapeApiError';
+    this.code = code;
+    this.status = status;
+  }
+}
 
 function clampStress(value: number): number {
   return Math.min(100, Math.max(0, Math.round(value)));
@@ -85,12 +96,7 @@ function normalizeRoute(route: EscapeRoute, index: number): EscapeRoute {
       .map((segment) => segment.traffic_year)
       .filter((year): year is number => year !== null);
   const measuredShare = summary?.measured_share ?? 0;
-  const confidence = resolveRouteConfidence(
-    measuredShare,
-    years,
-    segments,
-    summary?.confidence ?? 'low',
-  );
+  const confidence = resolveRouteConfidence(measuredShare);
 
   return {
     ...route,
@@ -121,10 +127,28 @@ function normalizeRoute(route: EscapeRoute, index: number): EscapeRoute {
 
 function normalizeResponse(raw: EscapeResponse, fallbackOrigin: LatLon): EscapeResponse {
   if (!raw || !Array.isArray(raw.routes) || raw.routes.length === 0) {
-    throw new Error('La respuesta del backend no contiene rutas');
+    throw new EscapeApiError(
+      'NO_ROUTES_FOUND',
+      'No hay rutas disponibles para este origen.',
+      404,
+    );
   }
 
-  const routes = raw.routes.map(normalizeRoute);
+  const routes = raw.routes
+    .map(normalizeRoute)
+    .filter(
+      (route) =>
+        haversineKm(fallbackOrigin, route.escape_point) >= MIN_ESCAPE_DISTANCE_KM,
+    );
+
+  if (routes.length === 0) {
+    throw new EscapeApiError(
+      'NO_ROUTES_FOUND',
+      'No hay rutas con un Escape Point a más de 200 m del origen.',
+      404,
+    );
+  }
+
   const recommended =
     raw.recommended_route_id && routes.some((route) => route.id === raw.recommended_route_id)
       ? raw.recommended_route_id
@@ -149,11 +173,6 @@ export async function searchEscapeRoutes(
   origin: LatLon,
   prefs: SearchPreferences,
 ): Promise<SearchResult> {
-  if (USE_MOCK) {
-    const response = await buildMockResponse(origin, prefs);
-    return { response, source: 'mock' };
-  }
-
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 6500);
 
@@ -183,22 +202,36 @@ export async function searchEscapeRoutes(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      interface ApiErrorBody {
+        error?: { code?: string; message?: string };
+      }
+      let detail: ApiErrorBody | null = null;
+      try {
+        detail = (await response.json()) as ApiErrorBody;
+      } catch {
+        detail = null;
+      }
+      throw new EscapeApiError(
+        detail?.error?.code ?? 'API_ERROR',
+        detail?.error?.message ?? `La API respondió con HTTP ${response.status}.`,
+        response.status,
+      );
     }
 
     const raw = (await response.json()) as EscapeResponse;
     return { response: normalizeResponse(raw, origin), source: 'live' };
   } catch (error) {
-    const response = await buildMockResponse(origin, prefs);
-    const reason =
-      error instanceof Error && error.name === 'AbortError'
-        ? 'el backend tardó demasiado'
-        : 'no se pudo conectar con el backend';
-    return {
-      response,
-      source: 'mock',
-      warning: `No se pudo usar la API (${reason}). Mostrando datos de ejemplo.`,
-    };
+    if (error instanceof EscapeApiError) throw error;
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new EscapeApiError(
+        'TIMEOUT',
+        'La API tardó demasiado en responder. Inténtalo de nuevo.',
+      );
+    }
+    throw new EscapeApiError(
+      'NETWORK_ERROR',
+      'No se pudo conectar con la API. Comprueba que el backend esté levantado.',
+    );
   } finally {
     window.clearTimeout(timeout);
   }

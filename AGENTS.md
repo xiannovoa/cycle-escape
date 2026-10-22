@@ -35,8 +35,8 @@ perfecta.
 4. **Sin medición no significa tráfico cero.** Los tramos sin aforo se estiman con OSM y se
    marcan como estimados, con menor confianza.
 5. **OpenStreetMap es siempre el grafo base** de routing y geometría.
-6. **La demo debe funcionar sin backend terminado**, usando el mock con la misma forma que
-   el contrato.
+6. **La demo usa únicamente la API real.** No hay datos mock ni fallback a datos de prueba;
+   si el backend falla o no hay cobertura, se muestra un aviso.
 
 ---
 
@@ -92,7 +92,7 @@ romper al consumidor.
 
 La propuesta completa, con ejemplos y preguntas abiertas, está en
 [`docs/api-contract.md`](docs/api-contract.md). Hasta que Xián la valide, es una propuesta:
-el frontend puede construir el mock con esa forma, pero no debe asumir que es definitiva.
+el frontend consume la API con esa forma, pero no debe asumir que es definitiva.
 
 ---
 
@@ -103,9 +103,10 @@ sin router si no hace falta.
 
 Reglas:
 
-- El frontend debe funcionar con datos mock desde el principio.
-- `api/client.ts` intenta el backend y cae al mock si falla o no está disponible.
-- Los datos mock viven en el repositorio y respetan el contrato.
+- El frontend consume la API real; no se añaden datos de prueba al repositorio.
+- Si la API falla, se muestra un error claro; nunca se inventan rutas.
+- Los errores de cobertura (`OUTSIDE_COVERAGE`, `NO_ROUTES_FOUND`) se muestran como aviso
+  temporal para probar otro origen.
 - Un único helper convierte GeoJSON `[lon, lat]` a Leaflet `[lat, lng]`.
 - El color de cada segmento se deriva de `road_stress` con una función centralizada; no se
   repiten umbrales por componentes.
@@ -121,9 +122,9 @@ Estructura de referencia (puede ajustarse sin romper el contrato):
 
 ```text
 frontend/src/
-├── api/          # cliente HTTP + fallback mock
+├── api/          # cliente HTTP de la API real
 ├── components/   # mapa, panel, tarjetas, leyenda
-├── data/         # respuesta mock
+├── data/         # (vacío: sin datos de prueba)
 ├── hooks/        # estado de búsqueda y selección
 ├── types/        # tipos del contrato
 └── utils/        # colores, formato, conversión de coordenadas
@@ -203,7 +204,7 @@ frontend/src/
 4. **No renombres campos compartidos** ni cambies la forma de la respuesta.
 5. **No inventes datos de tráfico** ni presentes estimaciones como mediciones.
 6. **Pregunta** cuando la tarea sea ambigua o afecte a otra área.
-7. **Verifica** que el frontend compila y que la demo funciona con el mock.
+7. **Verifica** que el frontend compila y que funciona contra la API real.
 8. **Reporta** qué has cambiado, qué has probado y qué queda pendiente.
 9. **No commitees** salvo que se pida explícitamente.
 10. **No introduzcas** autenticación, bases de datos, telemetría ni dependencias pesadas.
@@ -217,8 +218,8 @@ Para considerar una tarea terminada:
 - El cambio está dentro del ámbito asignado.
 - Compila / arranca sin errores.
 - Respeta el contrato y los nombres de campo.
-- El frontend sigue funcionando con el mock si el backend no está listo.
-- No se han añadido secretos ni datos voluminosos.
+- El frontend responde con un aviso claro si el backend no está disponible.
+- No se han añadido secretos, datos de prueba ni datos voluminosos.
 - La demo se puede explicar en una frase.
 - Si aplica, la documentación se ha actualizado.
 
@@ -232,7 +233,7 @@ Para considerar una tarea terminada:
 - [ ] Los colores de estrés y la leyenda son coherentes.
 - [ ] Se muestran Escape Time, distancia y QuietScore.
 - [ ] Se muestran fuente, año y confianza de los datos.
-- [ ] El fallback a mock está probado.
+- [ ] El aviso de “sin datos para esta zona” está probado.
 - [ ] El guion de demo se ha ensayado al menos una vez.
 
 ---

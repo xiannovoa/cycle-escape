@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { searchEscapeRoutes } from './api';
+import { EscapeApiError, searchEscapeRoutes } from './api';
 import { Controls } from './components/Controls';
 import { InfoModal } from './components/InfoModal';
 import { Legend } from './components/Legend';
@@ -22,11 +22,11 @@ export default function App() {
   const [origin, setOrigin] = useState<LatLon>(DEFAULT_ORIGIN);
   const [prefs, setPrefs] = useState<SearchPreferences>(DEFAULT_PREFS);
   const [data, setData] = useState<EscapeResponse | null>(null);
-  const [source, setSource] = useState<'live' | 'mock' | null>(null);
+  const [source, setSource] = useState<'live' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [originName, setOriginName] = useState('Santiago de Compostela');
   const [originLocality, setOriginLocality] = useState('Santiago de Compostela');
   const [geocoding, setGeocoding] = useState(false);
@@ -38,12 +38,30 @@ export default function App() {
   const requestId = useRef(0);
   const geocodeRequestId = useRef(0);
   const skipNextGeocode = useRef(false);
+  const toastTimer = useRef<number | null>(null);
+
+  function showToast(message: string) {
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimer.current = null;
+    }, 6000);
+  }
+
+  useEffect(
+    () => () => {
+      if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+    },
+    [],
+  );
 
   async function runSearch(nextOrigin: LatLon, nextPrefs: SearchPreferences) {
     const currentRequest = requestId.current + 1;
     requestId.current = currentRequest;
     setLoading(true);
     setError(null);
+    setToast(null);
 
     try {
       const result = await searchEscapeRoutes(nextOrigin, nextPrefs);
@@ -51,10 +69,32 @@ export default function App() {
 
       setData(result.response);
       setSource(result.source);
-      setNotice(result.warning ?? null);
       setSelectedId(null);
     } catch (searchError) {
       if (currentRequest !== requestId.current) return;
+
+      if (searchError instanceof EscapeApiError) {
+        if (
+          searchError.code === 'OUTSIDE_COVERAGE' ||
+          searchError.code === 'NO_ROUTES_FOUND'
+        ) {
+          setData(null);
+          setSource(null);
+          setSelectedId(null);
+          showToast('No hay datos de carreteras para esta zona. Prueba con otro origen.');
+          return;
+        }
+        if (searchError.code === 'DATA_NOT_READY') {
+          setData(null);
+          setSource(null);
+          setSelectedId(null);
+          showToast('El backend todavía no tiene datos cargados.');
+          return;
+        }
+        setError(searchError.message);
+        return;
+      }
+
       console.error(searchError);
       setError('No se pudieron calcular los corredores. Inténtalo de nuevo.');
     } finally {
@@ -70,8 +110,8 @@ export default function App() {
     setData(null);
     setSource(null);
     setSelectedId(null);
-    setNotice(null);
     setError(null);
+    setToast(null);
   }
 
   useEffect(() => {
@@ -150,12 +190,7 @@ export default function App() {
   const originHint = geocoding
     ? 'OpenStreetMap'
     : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Toca el mapa para cambiar el origen`;
-  const sourceLabelText =
-    source === 'live'
-      ? 'Datos en vivo'
-      : source === 'mock'
-        ? 'Datos de ejemplo'
-        : 'Sin buscar';
+  const sourceLabelText = source === 'live' ? 'Datos en vivo' : 'Sin buscar';
 
   return (
     <div className="app">
@@ -267,7 +302,6 @@ export default function App() {
             )}
           </button>
 
-          {notice && <div className="notice">{notice}</div>}
           {error && <div className="notice notice--error">{error}</div>}
 
           {loading && !data && (
@@ -338,6 +372,15 @@ export default function App() {
           )}
         </section>
       </main>
+
+      {toast && (
+        <div className="toast" role="status">
+          <span>{toast}</span>
+          <button type="button" onClick={() => setToast(null)} aria-label="Cerrar aviso">
+            ×
+          </button>
+        </div>
+      )}
 
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
     </div>

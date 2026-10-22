@@ -33,7 +33,7 @@ Si solo presenta una persona, el guion sigue siendo válido: se narran las tres 
 
 - [ ] Frontend arrancado y probado en el navegador de la demo.
 - [ ] Backend arrancado y `GET /api/health` responde `ok`.
-- [ ] Si el backend falla, fallback a mock verificado.
+- [ ] Aviso de backend no disponible verificado (sin datos de prueba).
 - [ ] Mapa con teselas cargadas (no depender del wifi del evento).
 - [ ] Capturas o vídeo de respaldo por si falla la red.
 - [ ] Zoom y tamaño de fuente legibles desde la última fila.
@@ -119,9 +119,9 @@ Señalar en pantalla:
 
 | Fallo | Plan B |
 |---|---|
-| Backend caído | Recargar en modo mock; el resultado es el mismo para la demo |
+| Backend caído | Mostrar captura/vídeo de respaldo; la app no inventa resultados |
 | Sin internet / teselas | Usar captura pregrabada del mapa y narrar sobre ella |
-| Búsqueda lenta | Ya hay resultados de demo precargados en el mock |
+| Búsqueda lenta | Esperar la respuesta real; no hay resultados precargados |
 | Error inesperado | Cambiar a la pestaña con el vídeo de respaldo y continuar |
 | Pregunta que no se sabe | "Es una limitación conocida del MVP; lo tenemos anotado" |
 
