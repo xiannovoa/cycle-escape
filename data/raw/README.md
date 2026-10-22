@@ -1,6 +1,6 @@
 # Datos en crudo (`data/raw`)
 
-Conxuntos de datos de entrada do proxecto. Son ficheiros pequenos (~2,8 MB en total),
+Conxuntos de datos de entrada do proxecto. Son ficheiros pequenos (~3,2 MB en total),
 por iso se versionan no repositorio: calquera persoa do equipo que clone o repo
 ten todo o necesario para traballar sen pasos previos.
 
