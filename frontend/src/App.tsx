@@ -17,6 +17,14 @@ import {
   type RiderProfile,
 } from './profile';
 import type { EscapeResponse, LatLon, SearchPreferences } from './types';
+import {
+  confidenceLabel,
+  directionArrow,
+  formatKm,
+  formatMinutes,
+  quietScoreColor,
+  sourceLabel,
+} from './utils';
 
 const DEFAULT_ORIGIN: LatLon = { lat: 42.8782, lon: -8.5448 };
 
@@ -46,6 +54,7 @@ export default function App() {
   const [streetError, setStreetError] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mobileResultsOpen, setMobileResultsOpen] = useState(false);
 
   const requestId = useRef(0);
   const geocodeRequestId = useRef(0);
@@ -124,6 +133,7 @@ export default function App() {
     setSelectedId(null);
     setError(null);
     setToast(null);
+    setMobileResultsOpen(false);
   }
 
   useEffect(() => {
@@ -221,8 +231,12 @@ export default function App() {
   const selectedRoute = data?.routes.find((route) => route.id === selectedId) ?? null;
   const originHint = geocoding
     ? 'OpenStreetMap'
-    : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Toca el mapa para cambiar el origen`;
+    : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Haz doble clic en el mapa para cambiar el origen`;
   const sourceLabelText = source === 'live' ? 'Datos en vivo' : 'Sin buscar';
+
+  useEffect(() => {
+    if (viewMode === 'desktop') setMobileResultsOpen(false);
+  }, [viewMode]);
 
   if (!profile) {
     return <Onboarding onComplete={handleProfileComplete} />;
@@ -378,7 +392,7 @@ export default function App() {
             <small>
               {hasOrigin
                 ? originHint
-                : 'Toca el mapa o busca una calle para empezar'}
+                : 'Haz doble clic en el mapa o busca una calle para empezar'}
             </small>
             {streetError && <small className="origin-error">{streetError}</small>}
           </section>
@@ -408,7 +422,8 @@ export default function App() {
             <div className="empty-state">
               <strong>Marca tu posición</strong>
               <p>
-                Toca el mapa o busca una calle. Las salidas aparecerán automáticamente.
+                Haz doble clic en el mapa o busca una calle. Las salidas aparecerán
+                automáticamente.
               </p>
             </div>
           )}
@@ -447,13 +462,55 @@ export default function App() {
 
           {selectedRoute && (
             <div className="map-readout">
-              <span>Corredor seleccionado</span>
-              <strong>{selectedRoute.label}</strong>
-              <small>
-                {selectedRoute.escape_time_min} min · QuietScore{' '}
-                {selectedRoute.quiet_score} · Escape Point en{' '}
-                {selectedRoute.escape_point.name}
-              </small>
+              <span className="map-readout__eyebrow">Corredor seleccionado</span>
+              <div className="map-readout__title">
+                <strong>{selectedRoute.label}</strong>
+                <span className="map-readout__direction">
+                  {directionArrow(selectedRoute.direction)} {selectedRoute.direction}
+                </span>
+              </div>
+              <span className="map-readout__point">
+                Escape Point · {selectedRoute.escape_point.name}
+              </span>
+
+              <div className="map-readout__metrics">
+                <div>
+                  <strong>
+                    {formatMinutes(selectedRoute.escape_time_min)}
+                    <em>min</em>
+                  </strong>
+                  <span>Escape Time</span>
+                </div>
+                <div>
+                  <strong>
+                    {formatKm(selectedRoute.distance_to_escape_km)}
+                    <em>km</em>
+                  </strong>
+                  <span>Distancia</span>
+                </div>
+                <div>
+                  <strong style={{ color: quietScoreColor(selectedRoute.quiet_score) }}>
+                    {selectedRoute.quiet_score}
+                    <em>/100</em>
+                  </strong>
+                  <span>QuietScore</span>
+                </div>
+              </div>
+
+              <div className="map-readout__meta">
+                <span
+                  className={`confidence confidence--${selectedRoute.traffic_summary.confidence}`}
+                >
+                  <i />
+                  Confianza {confidenceLabel(selectedRoute.traffic_summary.confidence)}
+                </span>
+                <span>
+                  {selectedRoute.traffic_summary.sources.map(sourceLabel).join(' · ')} ·{' '}
+                  {selectedRoute.traffic_summary.years.length
+                    ? selectedRoute.traffic_summary.years.join(', ')
+                    : 'sin año'}
+                </span>
+              </div>
             </div>
           )}
 
@@ -465,6 +522,86 @@ export default function App() {
           )}
         </section>
       </main>
+
+      {viewMode === 'mobile' && (
+        <>
+          <div className="mobile-search-bar">
+            {error && <div className="mobile-search-error">{error}</div>}
+            {streetError && <div className="mobile-search-error">{streetError}</div>}
+            <form
+              className="mobile-search"
+              onSubmit={(event) => void handleStreetSubmit(event)}
+            >
+              <input
+                type="text"
+                value={streetQuery}
+                placeholder="Escribe una calle…"
+                aria-label="Buscar calle de origen"
+                disabled={streetSearching}
+                onChange={(event) => {
+                  setStreetQuery(event.target.value);
+                  setStreetError(null);
+                }}
+              />
+              <button
+                type="submit"
+                className="mobile-search__go"
+                disabled={streetSearching || streetQuery.trim().length === 0}
+              >
+                {streetSearching ? '…' : 'Ir'}
+              </button>
+              {data && (
+                <button
+                  type="button"
+                  className="mobile-search__routes"
+                  onClick={() => setMobileResultsOpen(true)}
+                  aria-expanded={mobileResultsOpen}
+                >
+                  Salidas <span>{data.routes.length}</span>
+                </button>
+              )}
+            </form>
+          </div>
+
+          {mobileResultsOpen && data && (
+            <>
+              <div
+                className="mobile-sheet-backdrop"
+                onClick={() => setMobileResultsOpen(false)}
+              />
+              <section
+                className="mobile-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Salidas"
+              >
+                <div className="mobile-sheet__head">
+                  <div>
+                    <span className="eyebrow">Resultados</span>
+                    <h2>Salidas</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="mobile-sheet__close"
+                    onClick={() => setMobileResultsOpen(false)}
+                    aria-label="Cerrar salidas"
+                  >
+                    ×
+                  </button>
+                </div>
+                <ResultsPanel
+                  routes={data.routes}
+                  selectedId={selectedId}
+                  onSelect={(id) => {
+                    setSelectedId(id);
+                    setMobileResultsOpen(false);
+                  }}
+                />
+              </section>
+            </>
+          )}
+        </>
+      )}
 
       {toast && (
         <div className="toast" role="status">

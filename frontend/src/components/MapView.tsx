@@ -67,9 +67,13 @@ const originIcon = L.divIcon({
   iconAnchor: [11, 26],
 });
 
-function MapClickHandler({ onOriginChange }: { onOriginChange: (origin: LatLon) => void }) {
+function MapDoubleClickHandler({
+  onOriginChange,
+}: {
+  onOriginChange: (origin: LatLon) => void;
+}) {
   useMapEvents({
-    click(event) {
+    dblclick(event) {
       onOriginChange({ lat: event.latlng.lat, lon: event.latlng.lng });
     },
   });
@@ -120,6 +124,7 @@ export function MapView({
       zoom={13}
       zoomControl={false}
       scrollWheelZoom
+      doubleClickZoom={false}
       className="map"
     >
       <TileLayer
@@ -128,7 +133,7 @@ export function MapView({
       />
       <ZoomControl position="topright" />
       <ScaleControl position="bottomright" imperial={false} />
-      <MapClickHandler onOriginChange={onOriginChange} />
+      <MapDoubleClickHandler onOriginChange={onOriginChange} />
       <ResizeOnViewMode viewMode={viewMode} />
       <FitRoutes routes={routes} />
 

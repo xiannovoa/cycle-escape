@@ -136,12 +136,12 @@ En la primera visita se configura un **perfil local** con nombre, velocidad medi
 preferencia de salida. Se guarda en `localStorage`; no hay cuentas ni contraseñas. Desde
 **Ajustes** se puede editar en cualquier momento.
 
-La pantalla principal solo pide la posición: al tocar el mapa o buscar una calle, las
-rutas se recalculan automáticamente con las preferencias guardadas.
+La pantalla principal solo pide la posición: con doble clic en el mapa o buscando una
+calle, las rutas se recalculan automáticamente con las preferencias guardadas.
 
 ### Entradas
 
-- Posición de origen: clic en el mapa o búsqueda directa de una calle; se muestra el
+- Posición de origen: doble clic en el mapa o búsqueda directa de una calle; se muestra el
   nombre mediante geocodificación de Nominatim (OpenStreetMap). Santiago por defecto.
 - Perfil de bicicleta de carretera con asfalto fijado por defecto.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).

@@ -65,7 +65,7 @@ Si solo presenta una persona, el guion sigue siendo válido: se narran las tres 
    preferencia de salida (más rápido ↔ menor tráfico).
 2. Abrir **Ajustes** y recordar que esas preferencias ya están guardadas para todas las
    consultas.
-3. Hacer clic en el centro de Santiago o escribir una calle en el buscador de origen.
+3. Hacer doble clic en el centro de Santiago o escribir una calle en el buscador de origen.
 4. Las rutas aparecen automáticamente, sin pulsar ningún botón de búsqueda.
 
 Mientras carga:

@@ -48,9 +48,8 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
 
   function addTag(route: EscapeRoute | undefined, key: string, label: string) {
     if (!route || usedLabels.has(label)) return;
-    const current = tags.get(route.id) ?? [];
-    if (!route.is_recommended && current.length >= 1) return;
-    tags.set(route.id, [...current, { key, label }]);
+    if ((tags.get(route.id) ?? []).length >= 1) return;
+    tags.set(route.id, [{ key, label }]);
     usedLabels.add(label);
   }
 
@@ -65,12 +64,6 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
       (score >= GOOD_BALANCE_SCORE && score >= recommendedBalance - 10);
     if (isGood) addTag(bestBalance, 'balance', 'Mejor balance');
   }
-
-  routes.forEach((route) => {
-    if (!route.is_recommended && !tags.has(route.id)) {
-      tags.set(route.id, [{ key: 'alternative', label: 'Alternativa' }]);
-    }
-  });
 
   function tagsFor(route: EscapeRoute): RouteTag[] {
     return tags.get(route.id) ?? [];
@@ -179,9 +172,6 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
                 </span>
               </div>
 
-              {route.warnings.length > 0 && (
-                <p className="route-card__warning">{route.warnings[0]}</p>
-              )}
             </div>
           );
         })}
