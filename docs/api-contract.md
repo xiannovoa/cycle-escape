@@ -59,6 +59,7 @@ El frontend usa este endpoint solo para diagnóstico; nunca debe bloquear la dem
   "origin": { "lat": 42.8782, "lon": -8.5448 },
   "avg_speed_kmh": 22,
   "traffic_aversion": 0.6,
+  "traffic_lambda": 0.5,
   "surface_preference": "asphalt",
   "route_preference": "balanced",
   "max_candidates": 5
@@ -69,8 +70,9 @@ El frontend usa este endpoint solo para diagnóstico; nunca debe bloquear la dem
 |---|---|---|---|---|
 | `origin.lat` | number | Sí | -90..90 | Latitud del origen |
 | `origin.lon` | number | Sí | -180..180 | Longitud del origen |
-| `avg_speed_kmh` | number | No | 10..35 | Velocidad media; por defecto 22 |
+| `avg_speed_kmh` | number | No | 10..40 | Velocidad media; por defecto 22 |
 | `traffic_aversion` | number | No | 0..1 | 0 = tolera tráfico, 1 = lo evita a toda costa; por defecto 0.5 |
+| `traffic_lambda` | number | No | 0..1 | Peso continuo del componente de tráfico; 0 = directo, 1 = tranquilo. Por defecto 0.5 |
 | `surface_preference` | string | No | `asphalt` \| `mixed` \| `any` | Preferencia de superficie; por defecto `asphalt` |
 | `route_preference` | string | No | `direct` \| `balanced` \| `quiet` | Equilibrio entre rapidez y tranquilidad; por defecto `balanced` |
 | `max_candidates` | integer | No | 1..7 | Número máximo de corredores; por defecto 5 |
@@ -81,6 +83,9 @@ Notas:
   geolocalización del navegador.
 - `traffic_aversion` se puede presentar en la UI como Baja/Media/Alta, pero viaja como
   0–1 para no cambiar el contrato.
+- `traffic_lambda` es un campo aditivo y opcional. El frontend mantiene además
+  `route_preference` derivado de λ (`direct` < 0.34, `balanced`, `quiet` > 0.66) para que
+  un backend que aún no lea λ siga funcionando.
 
 ---
 

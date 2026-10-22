@@ -69,14 +69,15 @@ export interface EscapeResponse {
 export interface SearchPreferences {
   avgSpeedKmh: number;
   trafficAversion: number;
+  trafficLambda: number;
   surfacePreference: SurfacePreference;
-  routePreference: RoutePreference;
 }
 
 export interface EscapeRequest {
   origin: LatLon;
   avg_speed_kmh: number;
   traffic_aversion: number;
+  traffic_lambda: number;
   surface_preference: SurfacePreference;
   route_preference: RoutePreference;
   max_candidates: number;

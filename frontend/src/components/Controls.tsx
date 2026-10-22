@@ -1,8 +1,4 @@
-import type {
-  RoutePreference,
-  SearchPreferences,
-  SurfacePreference,
-} from '../types';
+import type { SearchPreferences } from '../types';
 
 interface Option {
   label: string;
@@ -57,17 +53,17 @@ export function Controls({ prefs, onChange }: ControlsProps) {
         <input
           className="range"
           type="range"
-          min={15}
-          max={30}
+          min={10}
+          max={40}
           step={1}
           value={prefs.avgSpeedKmh}
           aria-label="Velocidad media en kilómetros por hora"
           onChange={(event) => setField('avgSpeedKmh', Number(event.target.value))}
         />
         <div className="range__scale">
-          <span>15</span>
-          <span>22</span>
-          <span>30</span>
+          <span>10</span>
+          <span>25</span>
+          <span>40</span>
         </div>
       </div>
 
@@ -94,48 +90,25 @@ export function Controls({ prefs, onChange }: ControlsProps) {
         />
       </div>
 
-      <div className="control-row">
-        <div className="control">
-          <div className="control__label">
-            <span>Superficie</span>
-            <strong>{prefs.surfacePreference === 'asphalt' ? 'Asfalto' : 'Mixto'}</strong>
-          </div>
-          <Segmented
-            ariaLabel="Preferencia de superficie"
-            value={prefs.surfacePreference}
-            options={[
-              { label: 'Asfalto', value: 'asphalt' },
-              { label: 'Mixto', value: 'mixed' },
-            ]}
-            onChange={(value) =>
-              setField('surfacePreference', value as SurfacePreference)
-            }
-          />
+      <div className="control">
+        <div className="control__label">
+          <span>Prioridad</span>
         </div>
-
-        <div className="control">
-          <div className="control__label">
-            <span>Prioridad</span>
-            <strong>
-              {prefs.routePreference === 'direct'
-                ? 'Directa'
-                : prefs.routePreference === 'quiet'
-                  ? 'Tranquila'
-                  : 'Equilibrada'}
-            </strong>
-          </div>
-          <Segmented
-            ariaLabel="Prioridad de la salida"
-            value={prefs.routePreference}
-            options={[
-              { label: 'Directa', value: 'direct' },
-              { label: 'Equilibrada', value: 'balanced' },
-              { label: 'Tranquila', value: 'quiet' },
-            ]}
-            onChange={(value) =>
-              setField('routePreference', value as RoutePreference)
-            }
-          />
+        <input
+          className="range range--lambda"
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={prefs.trafficLambda}
+          aria-label="Peso lambda del componente de tráfico"
+          title="0 = prioriza rapidez · 1 = prioriza tranquilidad"
+          onChange={(event) => setField('trafficLambda', Number(event.target.value))}
+        />
+        <div className="range__scale range__scale--lambda">
+          <span>Directa</span>
+          <span>Equilibrada</span>
+          <span>Tranquila</span>
         </div>
       </div>
     </div>
