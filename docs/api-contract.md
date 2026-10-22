@@ -1,11 +1,12 @@
-# Contrato de API — Propuesta v0.1
+# Contrato de API — v0.1
 
-> **Estado:** propuesta para validar. No es vinculante hasta que Xián (backend) y Eva
-> (datos) la revisen. El frontend puede construir su mock con esta forma.
+> **Estado:** implementado en `backend/app/models.py` y cubierto por los tests de
+> `tests/test_api.py` y `tests/test_contract_models.py`. Los cambios deben ser aditivos y,
+> a ser posible, opcionales para no romper a los consumidores.
 >
 > **Objetivo:** fijar una respuesta única que permita al frontend pintar la ruta
 > recomendada, las alternativas, el Escape Point, el coloreado por estrés y los metadatos
-> de tráfico sin esperar a que el backend esté terminado.
+> de tráfico. El mock del frontend respeta la misma forma.
 >
 > **Regla:** los campos compartidos no se renombran sin coordinación. Los cambios deben ser
 > aditivos y, a ser posible, opcionales.
@@ -29,7 +30,7 @@
 
 ---
 
-## 2. Endpoints propuestos
+## 2. Endpoints
 
 | Método | Ruta | Uso |
 |---|---|---|
@@ -42,7 +43,7 @@
 {
   "status": "ok",
   "osm_graph_loaded": true,
-  "traffic_layers": ["xunta", "mitma"],
+  "traffic_layers": ["xunta", "mitma", "osm_estimate"],
   "schema_version": "0.1"
 }
 ```
@@ -72,20 +73,24 @@ El frontend usa este endpoint solo para diagnóstico; nunca debe bloquear la dem
 | `origin.lon` | number | Sí | -180..180 | Longitud del origen |
 | `avg_speed_kmh` | number | No | 10..40 | Velocidad media; por defecto 22 |
 | `traffic_aversion` | number | No | 0..1 | 0 = tolera tráfico, 1 = lo evita a toda costa; por defecto 0.5 |
-| `traffic_lambda` | number | No | 0..1 | Peso continuo del componente de tráfico; 0 = directo, 1 = tranquilo. Por defecto 0.5 |
-| `surface_preference` | string | No | `asphalt` \| `mixed` \| `any` | Preferencia de superficie; por defecto `asphalt` |
+| `traffic_lambda` | number | No | 0..1 | Peso continuo del componente de tráfico; 0 = directo, 1 = tranquilo. Si se omite, se usan los pesos de `route_preference` |
+| `surface_preference` | string | No | `asphalt` \| `mixed` \| `any` | Preferencia de superficie; por defecto `asphalt`. En v0.1 se acepta, pero no filtra el grafo: el Road Stress ya penaliza superficies no asfaltadas |
 | `route_preference` | string | No | `direct` \| `balanced` \| `quiet` | Equilibrio entre rapidez y tranquilidad; por defecto `balanced` |
 | `max_candidates` | integer | No | 1..7 | Número máximo de corredores; por defecto 5 |
 
 Notas:
 
-- El MVP no requiere geocodificación: el origen llega como coordenadas desde el mapa o la
-  geolocalización del navegador.
-- `traffic_aversion` se puede presentar en la UI como Baja/Media/Alta, pero viaja como
-  0–1 para no cambiar el contrato.
-- `traffic_lambda` es un campo aditivo y opcional. El frontend mantiene además
-  `route_preference` derivado de λ (`direct` < 0.34, `balanced`, `quiet` > 0.66) para que
-  un backend que aún no lea λ siga funcionando.
+- El backend no geocodifica: el origen llega como coordenadas. La búsqueda y la
+  geocodificación inversa las hace el frontend con Nominatim.
+- `traffic_aversion` modula el coste del routing: una aversión alta acepta rodeos para
+  evitar ejes estresantes. Se puede presentar en la UI como Baja/Media/Alta, pero viaja
+  como 0–1.
+- `traffic_lambda` pondera el ranking final (tiempo hasta el Escape Point frente a
+  QuietScore posterior). El frontend mantiene además `route_preference` derivado de λ
+  (`direct` < 0.34, `balanced`, `quiet` > 0.66) para que un backend que aún no lea λ siga
+  funcionando.
+- `max_candidates` limita el número de corredores devueltos; el backend puede devolver
+  menos si hay direcciones sin ruta alcanzable.
 
 ---
 
@@ -158,7 +163,7 @@ Notas:
 | `distance_to_escape_km` | number | Sí | Distancia hasta el Escape Point |
 | `quiet_score` | number | Sí | QuietScore de la red posterior al Escape Point (0–100) |
 | `avg_road_stress` | number | No | Estrés medio de toda la ruta (0–100) |
-| `escape_point` | object | Sí | Coordenadas del Escape Point |
+| `escape_point` | object | Sí | Coordenadas del Escape Point; `name` puede ser `null` |
 | `geometry` | GeoJSON LineString | Sí | Trazado completo de la ruta |
 | `segments` | array | Recomendado | Segmentos para colorear por estrés |
 | `traffic_summary` | object | Sí | Resumen de cobertura y confianza |
@@ -168,10 +173,17 @@ Notas:
 
 - `geometry` es la fuente autoritativa para dibujar la línea completa.
 - `segments` permite el coloreado por tramos. Si no llega, el frontend pinta la ruta con un
-  color único derivado de `avg_road_stress` y lo indica en la interfaz.
-- `escape_point` debe caer sobre la geometría de la ruta.
+  color único derivado de `avg_road_stress` y lo indica en la interfaz. En v0.1 el backend
+  los envía para todas las rutas.
+- `escape_point` debe caer sobre la geometría de la ruta. `escape_point.name` es opcional:
+  si es `null`, el frontend debe mostrar una etiqueta genérica y nunca asumir que existe.
 - `distance_to_escape_km` es la distancia recorrida desde el origen hasta el Escape Point,
   no la distancia en línea recta.
+- `quiet_score` se calcula sobre la red posterior al Escape Point, no sobre el tramo
+  urbano de salida.
+- Si el origen ya está en una zona sostenidamente tranquila, el Escape Point puede quedar
+  a 0 km y `escape_time_min` a 0. Es un resultado válido; la UI debería explicarlo como
+  "ya estás en zona tranquila" en lugar de mostrar un cero sin contexto.
 
 ### Segmento
 
@@ -212,8 +224,9 @@ Notas:
 Reglas de datos:
 
 - Si `traffic_source` es `osm_estimate`, entonces `imd` y `traffic_year` deben ser `null`.
-- Si `traffic_source` es `xunta` o `mitma`, `imd` debería estar presente; si no, marcar
-  confianza baja y explicarlo en `warnings`.
+- Si `traffic_source` es `xunta` o `mitma`, `imd` debería estar presente. Si falta, el
+  backend fuerza `traffic_confidence: "low"`; la capa normalizada no debería producir ese
+  caso.
 - `heavy_pct` se expresa en porcentaje (0–100), no en fracción.
 
 ### Resumen de tráfico de la ruta
@@ -234,16 +247,24 @@ Reglas de datos:
 | `measured_share` | number | Fracción 0–1 de la distancia con aforo medido |
 | `confidence` | string | Confianza agregada `high` \| `medium` \| `low` |
 
-### Semántica propuesta de `traffic_confidence`
+### Semántica implementada de `traffic_confidence`
 
-| Valor | Criterio orientativo |
+| Valor | Criterio |
 |---|---|
-| `high` | Aforo oficial reciente y matching geométrico fiable |
-| `medium` | Aforo oficial antiguo, cobertura parcial o matching dudoso |
+| `high` | Xunta con año real ≤ 3 años respecto al actual |
+| `medium` | Xunta más antiguo o sin año; MITMA (aforo de 2022 en el MVP) |
 | `low` | Sin aforo; Road Stress estimado solo con atributos OSM |
 
-> Estos umbrales debe validarlos Eva. La UI solo necesita los tres niveles y su
-> explicación; no debe inferir precisión que los datos no tienen.
+Confianza agregada de la ruta (`traffic_summary.confidence`):
+
+| Valor | Criterio |
+|---|---|
+| `high` | `measured_share >= 0.75` y todos los tramos medidos son `high` |
+| `medium` | Hay algún tramo medido, pero no se cumple `high` |
+| `low` | `measured_share == 0`: toda la ruta es `osm_estimate` |
+
+La UI solo necesita los tres niveles y su explicación; no debe inferir precisión que los
+datos no tienen.
 
 ---
 
@@ -518,21 +539,34 @@ la demo.
 
 - Tratar `geometry` y `segments[].geometry` como GeoJSON `[lon, lat]`.
 - No asumir que `segments` existe: degradar a color único.
-- No asumir que `imd`, `heavy_pct` o `traffic_year` existen.
+- No asumir que `imd`, `heavy_pct`, `traffic_year` o `escape_point.name` existen.
+- Si `escape_point.name` es `null`, usar una etiqueta genérica; nunca pasar `null` a una
+  función que espere texto.
 - Mostrar "Sin aforo (estimado)" cuando `traffic_source` sea `osm_estimate`.
 - Ordenar por el orden de `routes`, que ya viene priorizado por el backend.
 - No recalcular el ranking en el cliente; solo mostrar.
 
 ---
 
-## 8. Preguntas abiertas
+## 8. Decisiones cerradas y pendientes
 
-1. ¿La ruta definitiva es `POST /api/escape-routes`?
-2. ¿`quiet_score` se calcula también por segmento o solo por ruta?
-3. ¿Qué umbrales concretos definen `high`, `medium` y `low`?
-4. ¿Se devuelven siempre 5 candidatos o un máximo configurable?
-5. ¿El backend compone `label` o el frontend a partir de `direction` y `escape_point.name`?
-6. ¿Se necesita un endpoint de configuración (ciudad, atribución, límites del mapa)?
-7. ¿Cómo se comporta el backend si el origen está en el agua o fuera del grafo?
+### Cerradas para v0.1
+
+1. La ruta definitiva es `POST /api/escape-routes`; `GET /api/health` solo diagnostica.
+2. `quiet_score` se expone por ruta, calculado sobre la red posterior al Escape Point.
+3. Los umbrales de `traffic_confidence` son los de la sección 3.
+4. Se devuelven hasta 7 candidatos; 5 por defecto y configurable con `max_candidates`.
+5. El backend compone `label`; el frontend no recalcula el ranking.
+6. No hay endpoint de configuración de ciudad en v0.1: la demo está centrada en Santiago.
+7. Si el origen está fuera del grafo o a más de 1 km de la red, se devuelve
+   `OUTSIDE_COVERAGE`. Si está en el agua pero dentro de la cobertura, se usa el nodo más
+   cercano; si no hay rutas alcanzables, `NO_ROUTES_FOUND`.
+
+### Pendientes
+
+- Aplicar `surface_preference` en el coste de routing.
+- Desacoplar la ciudad de demo y soportar varias cachés de grafo.
+- Decidir si `quiet_score` se expone también por segmento.
+- Ampliar la cobertura de aforos y revisar los umbrales con ciclistas locales.
 
 Cualquier respuesta debe reflejarse aquí y en el código en el mismo PR.
