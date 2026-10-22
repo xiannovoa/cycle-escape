@@ -361,6 +361,28 @@ def test_quiet_preference_prefers_calm_network() -> None:
     assert routes[0].id == "oeste"
 
 
+def test_lambda_zero_prefers_escaping_early() -> None:
+    routes = rank_escape_routes(
+        [fast_route(), calm_route()], traffic_lambda=0
+    )
+
+    assert routes[0].id == "este"
+
+
+def test_lambda_one_prefers_calm_network() -> None:
+    routes = rank_escape_routes(
+        [fast_route(), calm_route()], traffic_lambda=1
+    )
+
+    assert routes[0].id == "oeste"
+
+
+@pytest.mark.parametrize("value", [-0.01, 1.01])
+def test_invalid_traffic_lambda(value: float) -> None:
+    with pytest.raises(ValueError):
+        rank_escape_routes([busy_then_quiet()], traffic_lambda=value)
+
+
 def test_ranking_keeps_one_route_per_direction() -> None:
     routes = rank_escape_routes(
         [fast_route("E"), calm_route("E"), calm_route("W")]

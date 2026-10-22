@@ -501,6 +501,7 @@ def create_app(
         ranked = rank_escape_routes(
             candidates,
             route_preference=payload.route_preference,
+            traffic_lambda=payload.traffic_lambda,
             max_routes=payload.max_candidates,
             graph=graph,
         )

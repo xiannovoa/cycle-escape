@@ -157,8 +157,9 @@ def test_explicit_preferences_are_accepted(client: TestClient) -> None:
         "/api/escape-routes",
         json={
             "origin": ORIGIN,
-            "avg_speed_kmh": 25,
+            "avg_speed_kmh": 40,
             "traffic_aversion": 0.8,
+            "traffic_lambda": 0.8,
             "route_preference": "quiet",
             "surface_preference": "mixed",
             "max_candidates": 3,

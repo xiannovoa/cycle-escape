@@ -162,12 +162,14 @@ class EscapeRoutesRequest(BaseModel):
 
     origin: LatLon
     avg_speed_kmh: float = Field(
-        default=DEFAULT_AVG_SPEED_KMH, ge=10, le=35
+        default=DEFAULT_AVG_SPEED_KMH, ge=10, le=40
     )
     #: 0 = tolera el tráfico, 1 = lo evita a toda costa.
     traffic_aversion: float = Field(
         default=DEFAULT_TRAFFIC_AVERSION, ge=0, le=1
     )
+    #: Peso continuo directo <-> tranquilo. Si se omite, se usa route_preference.
+    traffic_lambda: float | None = Field(default=None, ge=0, le=1)
     surface_preference: SurfacePreference = "asphalt"
     route_preference: RoutePreference = "balanced"
     max_candidates: int = Field(

@@ -468,6 +468,7 @@ def rank_escape_routes(
     routes: Sequence[CandidateRoute],
     *,
     route_preference: str = "balanced",
+    traffic_lambda: float | None = None,
     max_routes: int = 5,
     thresholds: EscapeThresholds = DEFAULT_THRESHOLDS,
     allow_fallback: bool = True,
@@ -477,7 +478,11 @@ def rank_escape_routes(
 
     Se elige primero la mejor ruta de cada dirección y después se ordenan las
     direcciones. El tiempo se normaliza entre candidatos y se combina con el
-    QuietScore posterior según ``route_preference``. Si se pasa ``graph``, se
+    QuietScore posterior.
+
+    ``traffic_lambda`` (0 = directo, 1 = tranquilo) define el peso continuo.
+    Si no se envía, se usan los pesos discretos de ``route_preference`` para
+    mantener compatibilidad con clientes antiguos. Si se pasa ``graph``, se
     exige además que el Escape Point haya salido de una zona urbana densa.
     """
     if not routes:
@@ -485,12 +490,18 @@ def rank_escape_routes(
     if max_routes < 1:
         raise ValueError("max_routes debe ser positivo")
 
-    weights = ROUTE_PREFERENCE_WEIGHTS.get(route_preference)
-    if weights is None:
-        raise ValueError(
-            "route_preference debe ser direct, balanced o quiet"
-        )
-    weight_time, weight_quiet = weights
+    if traffic_lambda is not None:
+        if not 0.0 <= traffic_lambda <= 1.0:
+            raise ValueError("traffic_lambda debe estar entre 0 y 1")
+        weight_time = 1.0 - traffic_lambda
+        weight_quiet = traffic_lambda
+    else:
+        weights = ROUTE_PREFERENCE_WEIGHTS.get(route_preference)
+        if weights is None:
+            raise ValueError(
+                "route_preference debe ser direct, balanced o quiet"
+            )
+        weight_time, weight_quiet = weights
 
     density_index = (
         NodeDensityIndex(

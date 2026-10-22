@@ -102,6 +102,7 @@ def test_request_defaults() -> None:
 
     assert request.avg_speed_kmh == 22
     assert request.traffic_aversion == 0.5
+    assert request.traffic_lambda is None
     assert request.surface_preference == "asphalt"
     assert request.route_preference == "balanced"
     assert request.max_candidates == 5
@@ -111,9 +112,11 @@ def test_request_defaults() -> None:
     ("field", "value"),
     [
         ("avg_speed_kmh", 9),
-        ("avg_speed_kmh", 36),
+        ("avg_speed_kmh", 41),
         ("traffic_aversion", -0.1),
         ("traffic_aversion", 1.1),
+        ("traffic_lambda", -0.1),
+        ("traffic_lambda", 1.1),
         ("max_candidates", 0),
         ("max_candidates", 8),
         ("surface_preference", "gravel"),
@@ -130,6 +133,19 @@ def test_invalid_request_parameters(field: str, value: object) -> None:
 def test_origin_is_required() -> None:
     with pytest.raises(ValidationError):
         EscapeRoutesRequest.model_validate({})
+
+
+def test_request_accepts_speed_40_and_lambda_extremes() -> None:
+    for value in (0, 1):
+        request = EscapeRoutesRequest.model_validate(
+            {
+                "origin": {"lat": 42.8782, "lon": -8.5448},
+                "avg_speed_kmh": 40,
+                "traffic_lambda": value,
+            }
+        )
+        assert request.avg_speed_kmh == 40
+        assert request.traffic_lambda == value
 
 
 # --- Geometría -------------------------------------------------------------
