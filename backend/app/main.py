@@ -5,9 +5,11 @@ Expone el motor de routing con la forma exacta del contrato v0.1:
 - ``GET /api/health``: diagnóstico del grafo y de las capas de tráfico.
 - ``POST /api/escape-routes``: corredores de escape para un origen, sin destino.
 
-El grafo se carga al arrancar desde la caché local. Si no existe, el backend
-arranca en estado ``degraded`` y responde 503 en lugar de intentar una descarga
-larga que rompería la demo.
+El grafo se carga al arrancar desde la caché local, se enriquece con la capa
+de tráfico medida (``data/raw/imd_santiago.geojson``) y solo después se calcula
+el Road Stress. Si la capa no existe o no valida, el backend sigue funcionando
+con estimaciones OSM. Si no hay grafo cacheado, arranca en estado ``degraded``
+y responde 503 en lugar de intentar una descarga larga que rompería la demo.
 """
 
 from __future__ import annotations
@@ -49,6 +51,7 @@ from app.routing import (
     route_candidates,
 )
 from app.scoring import score_graph_edges
+from app.traffic_enrichment import enrich_graph_with_traffic
 
 logger = logging.getLogger(__name__)
 
@@ -197,6 +200,7 @@ def _traffic_summary(
     )
 
     if measured_share == 0:
+        # Contrato: low = sin aforo; medium = cobertura parcial o aforo antiguo.
         confidence = "low"
     elif (
         measured_share >= 0.75
@@ -204,10 +208,8 @@ def _traffic_summary(
         and all(value == "high" for value in measured_confidences)
     ):
         confidence = "high"
-    elif measured_share >= 0.25:
-        confidence = "medium"
     else:
-        confidence = "low"
+        confidence = "medium"
 
     return TrafficSummary(
         sources=sources or ["osm_estimate"],
@@ -295,13 +297,40 @@ def _try_load_graph(app: FastAPI) -> None:
     try:
         started = time.perf_counter()
         graph = get_graph()
+
+        layers = list(ACTIVE_TRAFFIC_LAYERS)
+        try:
+            report = enrich_graph_with_traffic(graph)
+            if report.sources:
+                layers = [
+                    source
+                    for source in ("xunta", "mitma")
+                    if source in report.sources
+                ] + ["osm_estimate"]
+            app.state.traffic_report = report
+            logger.info(
+                "Tráfico asociado: %d/%d tramos, %d aristas, %.1f km",
+                report.matched_segments,
+                report.total_segments,
+                report.matched_edges,
+                report.matched_length_km,
+            )
+        except Exception as exc:  # capa ausente, esquema inválido, geopandas...
+            app.state.traffic_error = str(exc)
+            logger.warning("Sin enriquecimiento de tráfico: %s", exc)
+
+        # Puntuar siempre después de enriquecer: si no, el Road Stress se
+        # quedaría calculado solo con OSM.
         score_graph_edges(graph)
+
         app.state.graph = graph
+        app.state.traffic_layers = layers
         logger.info(
-            "Grafo cargado en %.1f s: %d nodos, %d aristas",
+            "Grafo cargado en %.1f s: %d nodos, %d aristas, capas=%s",
             time.perf_counter() - started,
             graph.number_of_nodes(),
             graph.number_of_edges(),
+            layers,
         )
     except Exception as exc:  # caché corrupta, dependencia rota, etc.
         app.state.graph_error = str(exc)
@@ -413,6 +442,9 @@ def create_app(
     )
     app.state.graph = graph
     app.state.graph_error = None
+    app.state.traffic_layers = list(ACTIVE_TRAFFIC_LAYERS)
+    app.state.traffic_report = None
+    app.state.traffic_error = None
 
     origins = cors_origins
     if origins is None:
@@ -437,7 +469,8 @@ def create_app(
         return HealthResponse(
             status="ok" if loaded else "degraded",
             osm_graph_loaded=loaded,
-            traffic_layers=list(ACTIVE_TRAFFIC_LAYERS),
+            traffic_layers=list(request.app.state.traffic_layers)
+            or list(ACTIVE_TRAFFIC_LAYERS),
             schema_version=SCHEMA_VERSION,
         )
 

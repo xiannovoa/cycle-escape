@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import networkx as nx
 import pytest
@@ -10,11 +11,12 @@ from fastapi.testclient import TestClient
 from pyproj import Transformer
 
 from app import main
-from app.graph_loader import SANTIAGO_CENTER, cache_path, get_graph
+from app.graph_loader import SANTIAGO_CENTER, cache_path
 from app.main import create_app
 from app.models import DIRECTIONS, EscapeRoutesResponse
 
 ORIGIN = {"lat": SANTIAGO_CENTER[0], "lon": SANTIAGO_CENTER[1]}
+DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "raw" / "imd_santiago.geojson"
 
 
 # --- Grafo sintético ------------------------------------------------------
@@ -248,13 +250,19 @@ def test_cors_preflight_allows_vite(client: TestClient) -> None:
 
 @pytest.mark.integration
 @pytest.mark.skipif(
-    not cache_path().exists(),
-    reason="requiere el grafo real cacheado en tmp/osm",
+    not cache_path().exists() or not DATA_PATH.exists(),
+    reason="requiere el grafo real cacheado y la capa IMD",
 )
 def test_real_santiago_api() -> None:
-    graph = get_graph()
-    with make_client(graph) as client:
+    app = create_app(load_graph=True)
+    with TestClient(app) as client:
+        health = client.get("/api/health")
         response = client.post("/api/escape-routes", json={"origin": ORIGIN})
+
+    assert health.status_code == 200
+    assert {"xunta", "mitma", "osm_estimate"} <= set(
+        health.json()["traffic_layers"]
+    )
 
     assert response.status_code == 200
     payload = response.json()
@@ -275,3 +283,17 @@ def test_real_santiago_api() -> None:
             and abs(lat - route.escape_point.lat) < 1e-6
             for lon, lat in route.geometry.coordinates
         )
+
+    assert any(route.traffic_summary.measured_share > 0 for route in model.routes)
+    measured_segments = [
+        segment
+        for route in model.routes
+        for segment in route.segments
+        if segment.imd is not None
+    ]
+    assert measured_segments
+    assert all(
+        segment.traffic_source in {"xunta", "mitma"}
+        for segment in measured_segments
+    )
+    assert any(segment.imd > 20_000 for segment in measured_segments)
