@@ -271,6 +271,18 @@ VITE_API_URL=http://host:puerto
 Si la API falla o no hay cobertura para el origen, la interfaz muestra un aviso y no usa
 datos simulados.
 
+### Despliegue en Vercel
+
+El frontend se puede publicar en Vercel con una función serverless que hace de proxy
+`/api` hacia el backend público, sin CORS y sin exponer la URL del backend al navegador.
+
+La guía completa está en [`docs/deploy-vercel.md`](docs/deploy-vercel.md). Resumen:
+
+- Vercel aloja **solo el frontend**; el backend debe estar público aparte.
+- Root Directory: `frontend`.
+- Variable de entorno `BACKEND_URL` con la URL base del backend.
+- La configuración está en `frontend/vercel.json` y `frontend/api/[...path].js`.
+
 ### Backend
 
 ```bash
