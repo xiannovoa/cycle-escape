@@ -1,0 +1,67 @@
+# --- Sistema / editores ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+ENV/
+.python-version
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- Node / frontend ---
+node_modules/
+.pnpm-store/
+.yarn/
+.next/
+.nuxt/
+out/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Secretos y configuración local ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+config.local.*
+
+# --- Datos: los crudos y procesados NO van al repo ---
+# (solo se versionan los .gitkeep para conservar la estructura de carpetas)
+/data/raw/**/*
+!/data/raw/**/.gitkeep
+/data/processed/**/*
+!/data/processed/**/.gitkeep
+
+# --- Ficheros voluminosos / temporales ---
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.log
+tmp/
+temp/
