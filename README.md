@@ -1,11 +1,11 @@
-# Cycle Escape
+# Cyclout
 
 **Encuentra por dónde escapar de la ciudad en bicicleta de carretera.**
 
 > "Estoy en una ciudad que no conozco. ¿Por qué dirección debería salir para alcanzar
 > carreteras tranquilas y con poco tráfico lo antes posible?"
 
-Cycle Escape es una aplicación web para ciclistas de carretera que visitan una ciudad que
+Cyclout es una aplicación web para ciclistas de carretera que visitan una ciudad que
 no conocen. En lugar de pedir un destino, el usuario indica dónde está y cómo le gusta
 rodar. La aplicación analiza la red viaria de alrededor y propone varios **corredores de
 escape** hacia carreteras tranquilas, explicando cuánto tarda en salir de la ciudad y qué
@@ -48,7 +48,7 @@ Los kilómetros posteriores al Escape Point también deben mantenerse razonablem
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
 
-En el MVP se exige que el punto esté a **más de 200 m del origen** y que los siguientes
+En el MVP se exige que el punto esté a **más de 1,5 km del origen** y que los siguientes
 **5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
 trazado con estrés ≤ 30** y fuera de una zona urbana densa.
 
@@ -130,15 +130,25 @@ los aforos.
 
 ## Experiencia de usuario
 
+### Onboarding y configuración
+
+En la primera visita se configura un **perfil local** con nombre, velocidad media y
+preferencia de salida. Se guarda en `localStorage`; no hay cuentas ni contraseñas. Desde
+**Ajustes** se puede editar en cualquier momento.
+
+La pantalla principal solo pide la posición: con doble clic en el mapa o buscando una
+calle, las rutas se recalculan automáticamente con las preferencias guardadas.
+
 ### Entradas
 
-- Posición de origen: clic en el mapa o búsqueda directa de una calle; se muestra el
+- Posición de origen: doble clic en el mapa o búsqueda directa de una calle; se muestra el
   nombre mediante geocodificación de Nominatim (OpenStreetMap). Santiago por defecto.
 - Perfil de bicicleta de carretera con asfalto fijado por defecto.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
-- Aversión al tráfico (baja / media / alta).
-- Prioridad continua: de **salida directa** (0) a **menor tráfico** (1). Pondera el
-  tiempo frente al QuietScore al elegir el corredor recomendado.
+- Preferencia de salida: de **más rápido** (0) a **menor tráfico** (1). Ajusta a la vez
+  el peso del tiempo frente al QuietScore y la aversión al tráfico.
+
+Estos parámetros se configuran en el onboarding o en Ajustes, no en cada consulta.
 
 ### Salidas
 
@@ -157,11 +167,17 @@ Para cada uno:
 - QuietScore después del Escape Point;
 - confianza de los datos;
 - fuente y año de los aforos;
-- avisos cuando un tramo va estimado.
+- avisos cuando un tramo va estimado;
+- etiquetas comparativas como **Más rápida**, **Menos tráfico** o **Mejor confianza**
+  para que el usuario decida el equilibrio que prefiere.
 
 La ruta recomendada se resalta sobre el mapa y el **Escape Point se muestra de forma muy
 destacada**. El resto de alternativas queda visible pero atenuado. La tarjeta recomendada
 se tiñe con el color de la confianza de sus datos de tráfico (verde, ámbar o terracota).
+
+La interfaz es responsive: en móvil el mapa ocupa la parte superior y el panel de origen y
+resultados se presenta como una hoja inferior desplazable. El onboarding y los ajustes se
+adaptan a pantalla completa.
 
 ### Colores de Road Stress
 
@@ -297,7 +313,8 @@ Las reglas de colaboración y los límites de cada área están en [`AGENTS.md`]
 Incluido:
 
 - selección de origen en Santiago de Compostela;
-- preferencias básicas de velocidad, aversión y superficie;
+- perfil local con velocidad y preferencia de salida;
+- onboarding, ajustes y vista móvil;
 - entre 3 y 5 corredores candidatos;
 - ruta recomendada + alternativas;
 - Escape Point y métricas;

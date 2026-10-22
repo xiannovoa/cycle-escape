@@ -16,8 +16,8 @@ const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').re
   '',
 );
 
-//: Un Escape Point pegado al origen no es una salida real.
-const MIN_ESCAPE_DISTANCE_KM = 0.2;
+//: Los Escape Points demasiado cerca del origen siguen dentro del centro urbano.
+const MIN_ESCAPE_DISTANCE_KM = 1.5;
 
 export class EscapeApiError extends Error {
   code: string;
@@ -108,10 +108,10 @@ function normalizeRoute(route: EscapeRoute, index: number): EscapeRoute {
     distance_to_escape_km: Number(route.distance_to_escape_km) || 0,
     quiet_score: clampStress(Number(route.quiet_score) || 0),
     avg_road_stress: clampStress(Number(route.avg_road_stress) || 0),
-    escape_point: route.escape_point ?? {
-      lat: last[1],
-      lon: last[0],
-      name: 'Escape Point',
+    escape_point: {
+      lat: route.escape_point?.lat ?? last[1],
+      lon: route.escape_point?.lon ?? last[0],
+      name: route.escape_point?.name?.trim() || 'Escape Point',
     },
     geometry,
     segments,
@@ -144,7 +144,7 @@ function normalizeResponse(raw: EscapeResponse, fallbackOrigin: LatLon): EscapeR
   if (routes.length === 0) {
     throw new EscapeApiError(
       'NO_ROUTES_FOUND',
-      'No hay rutas con un Escape Point a más de 200 m del origen.',
+      'No hay rutas con un Escape Point fuera del centro urbano.',
       404,
     );
   }

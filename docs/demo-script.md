@@ -1,4 +1,4 @@
-# Guion de demo — Cycle Escape
+# Guion de demo - Cyclout
 
 > Documento de trabajo para el equipo. Objetivo: una demo de **3 minutos** que explique el
 > problema, muestre el producto y deje claro qué es una estimación y qué está medido.
@@ -7,7 +7,7 @@
 
 ## 1. Mensaje central
 
-> "No necesitas un destino para salir de la ciudad. Cycle Escape te dice hacia dónde
+> "No necesitas un destino para salir de la ciudad. Cyclout te dice hacia dónde
 > pedalear para encontrar carreteras tranquilas lo antes posible."
 
 Todo lo que se diga en la demo debe reforzar esa frase. Si una función no ayuda a
@@ -54,22 +54,24 @@ Si solo presenta una persona, el guion sigue siendo válido: se narran las tres 
 > te pide un destino. Strava te enseña rutas de otros. Ninguno responde a la pregunta:
 > **¿por qué dirección salgo?**"
 
-> "Cycle Escape analiza la red viaria alrededor de tu posición y busca los corredores de
+> "Cyclout analiza la red viaria alrededor de tu posición y busca los corredores de
 > escape: los puntos donde empieza una red sostenida de carreteras tranquilas."
 
-### 0:30–1:00 — Origen y preferencias
+### 0:30–1:00 — Perfil y origen
 
 **Javi (interacción):**
 
-1. Hacer clic en el centro de Santiago o escribir una calle en el buscador de origen.
-2. Ajustar velocidad media a 22 km/h.
-3. Subir la aversión al tráfico a "Alta".
-4. Mover la prioridad hacia "Menor tráfico" (aproximadamente 0.65).
-5. Pulsar "Buscar salidas".
+1. Si es la primera visita, mostrar el onboarding y guardar el perfil con velocidad y
+   preferencia de salida (más rápido ↔ menor tráfico).
+2. Abrir **Ajustes** y recordar que esas preferencias ya están guardadas para todas las
+   consultas.
+3. Hacer doble clic en el centro de Santiago o escribir una calle en el buscador de origen.
+4. Las rutas aparecen automáticamente, sin pulsar ningún botón de búsqueda.
 
 Mientras carga:
 
-> "No pedimos destino. Pedimos punto de partida y tolerancia al tráfico."
+> "No pedimos destino ni preferencias en cada salida. Marcamos dónde estamos y la app
+> usa el perfil que ya hemos configurado."
 
 ### 1:00–2:00 — Resultado sobre el mapa
 
@@ -111,7 +113,7 @@ Señalar en pantalla:
 
 **Javi (cierre):**
 
-> "Cycle Escape no te lleva a un destino. Te dice por dónde empezar a pedalear. Gracias."
+> "Cyclout no te lleva a un destino. Te dice por dónde empezar a pedalear. Gracias."
 
 ---
 
@@ -176,5 +178,5 @@ del modelo de estrés.
 
 ## 8. Cierre de una frase
 
-> "Cycle Escape convierte la pregunta '¿por dónde salgo?' en una ruta visual, medible y
+> "Cyclout convierte la pregunta '¿por dónde salgo?' en una ruta visual, medible y
 > honesta sobre los datos que tenemos."

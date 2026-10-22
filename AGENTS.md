@@ -1,7 +1,7 @@
 # AGENTS.md — Reglas de colaboración
 
 Este documento es la **fuente de verdad** para las personas y los agentes de IA que
-trabajan en Cycle Escape. Si una instrucción contradice este documento, pregunta antes de
+trabajan en Cyclout. Si una instrucción contradice este documento, pregunta antes de
 improvisar.
 
 Contexto de producto, arquitectura y puesta en marcha: [`README.md`](README.md).
@@ -13,7 +13,7 @@ Guion de demo: [`docs/demo-script.md`](docs/demo-script.md).
 
 ## 1. Objetivo del proyecto
 
-Cycle Escape ayuda a un ciclista de carretera que está en una ciudad desconocida a decidir
+Cyclout ayuda a un ciclista de carretera que está en una ciudad desconocida a decidir
 **por qué dirección salir** hacia carreteras tranquilas, sin necesidad de tener un destino.
 
 El MVP se demuestra en Santiago de Compostela. La arquitectura no debe quedar hardcodeada
@@ -104,6 +104,8 @@ sin router si no hace falta.
 Reglas:
 
 - El frontend consume la API real; no se añaden datos de prueba al repositorio.
+- El perfil del ciclista (velocidad y preferencia de salida) se guarda en `localStorage`.
+  No es autenticación: no hay cuentas, contraseñas ni datos personales en el servidor.
 - Si la API falla, se muestra un error claro; nunca se inventan rutas.
 - Los errores de cobertura (`OUTSIDE_COVERAGE`, `NO_ROUTES_FOUND`) se muestran como aviso
   temporal para probar otro origen.

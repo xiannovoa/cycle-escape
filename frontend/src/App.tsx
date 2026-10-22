@@ -1,26 +1,45 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { EscapeApiError, searchEscapeRoutes } from './api';
-import { Controls } from './components/Controls';
 import { InfoModal } from './components/InfoModal';
 import { Legend } from './components/Legend';
 import { MapView } from './components/MapView';
+import { Onboarding } from './components/Onboarding';
 import { ResultsPanel } from './components/ResultsPanel';
+import { SettingsModal } from './components/SettingsModal';
 import { reverseGeocode, searchStreet } from './geocode';
+import {
+  DEFAULT_PROFILE,
+  loadProfile,
+  normalizeProfile,
+  profileToPrefs,
+  saveProfile,
+  type RiderProfile,
+} from './profile';
 import type { EscapeResponse, LatLon, SearchPreferences } from './types';
+import {
+  confidenceLabel,
+  directionArrow,
+  formatKm,
+  formatMinutes,
+  quietScoreColor,
+  sourceLabel,
+} from './utils';
 
 const DEFAULT_ORIGIN: LatLon = { lat: 42.8782, lon: -8.5448 };
 
-const DEFAULT_PREFS: SearchPreferences = {
-  avgSpeedKmh: 22,
-  trafficAversion: 0.5,
-  trafficLambda: 0.5,
-  surfacePreference: 'asphalt',
-};
+type ViewMode = 'desktop' | 'mobile';
 
 export default function App() {
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    window.matchMedia('(max-width: 700px)').matches ? 'mobile' : 'desktop',
+  );
+  const [profile, setProfile] = useState<RiderProfile | null>(() => loadProfile());
+  const [prefs, setPrefs] = useState<SearchPreferences>(() =>
+    profileToPrefs(loadProfile() ?? DEFAULT_PROFILE),
+  );
   const [origin, setOrigin] = useState<LatLon>(DEFAULT_ORIGIN);
-  const [prefs, setPrefs] = useState<SearchPreferences>(DEFAULT_PREFS);
+  const [hasOrigin, setHasOrigin] = useState(false);
   const [data, setData] = useState<EscapeResponse | null>(null);
   const [source, setSource] = useState<'live' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -34,6 +53,8 @@ export default function App() {
   const [streetSearching, setStreetSearching] = useState(false);
   const [streetError, setStreetError] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mobileResultsOpen, setMobileResultsOpen] = useState(false);
 
   const requestId = useRef(0);
   const geocodeRequestId = useRef(0);
@@ -112,6 +133,7 @@ export default function App() {
     setSelectedId(null);
     setError(null);
     setToast(null);
+    setMobileResultsOpen(false);
   }
 
   useEffect(() => {
@@ -152,9 +174,11 @@ export default function App() {
 
   function handleOriginChange(nextOrigin: LatLon) {
     setOrigin(nextOrigin);
+    setHasOrigin(true);
     setGeocoding(true);
     setStreetError(null);
     clearResults();
+    void runSearch(nextOrigin, prefs);
   }
 
   async function handleStreetSubmit(event: FormEvent<HTMLFormElement>) {
@@ -175,25 +199,51 @@ export default function App() {
 
     skipNextGeocode.current = true;
     setOrigin(result.origin);
+    setHasOrigin(true);
     setOriginName(result.name);
     setOriginLocality(result.locality);
     setGeocoding(false);
     setStreetQuery('');
     clearResults();
+    void runSearch(result.origin, prefs);
   }
 
-  function handlePrefsChange(nextPrefs: SearchPreferences) {
+  function handleProfileComplete(nextProfile: RiderProfile) {
+    const normalized = normalizeProfile(nextProfile);
+    saveProfile(normalized);
+    setProfile(normalized);
+    setPrefs(profileToPrefs(normalized));
+  }
+
+  function handleSettingsSave(nextProfile: RiderProfile) {
+    const normalized = normalizeProfile(nextProfile);
+    const nextPrefs = profileToPrefs(normalized);
+    saveProfile(normalized);
+    setProfile(normalized);
     setPrefs(nextPrefs);
+    setSettingsOpen(false);
+    clearResults();
+    if (hasOrigin) {
+      void runSearch(origin, nextPrefs);
+    }
   }
 
   const selectedRoute = data?.routes.find((route) => route.id === selectedId) ?? null;
   const originHint = geocoding
     ? 'OpenStreetMap'
-    : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Toca el mapa para cambiar el origen`;
+    : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Haz doble clic en el mapa para cambiar el origen`;
   const sourceLabelText = source === 'live' ? 'Datos en vivo' : 'Sin buscar';
 
+  useEffect(() => {
+    if (viewMode === 'desktop') setMobileResultsOpen(false);
+  }, [viewMode]);
+
+  if (!profile) {
+    return <Onboarding onComplete={handleProfileComplete} />;
+  }
+
   return (
-    <div className="app">
+    <div className={`app app--${viewMode}`}>
       <header className="topbar">
         <div className="brand">
           <span className="brand__mark" aria-hidden="true">
@@ -209,7 +259,7 @@ export default function App() {
             </svg>
           </span>
           <div className="brand__text">
-            <h1>Cycle Escape</h1>
+            <h1>Cyclout</h1>
             <p>Sal de la ciudad. Encuentra carreteras tranquilas.</p>
           </div>
         </div>
@@ -220,6 +270,50 @@ export default function App() {
             {sourceLabelText}
           </span>
           <span className="city-badge">Santiago de Compostela</span>
+
+          <div className="view-switch" role="group" aria-label="Vista de la aplicación">
+            <button
+              type="button"
+              className={viewMode === 'desktop' ? 'is-active' : ''}
+              onClick={() => setViewMode('desktop')}
+              aria-pressed={viewMode === 'desktop'}
+              title="Vista PC"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect
+                  x="3"
+                  y="4"
+                  width="18"
+                  height="12"
+                  rx="1.5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path d="M12 16v4M8 20h8" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={viewMode === 'mobile' ? 'is-active' : ''}
+              onClick={() => setViewMode('mobile')}
+              aria-pressed={viewMode === 'mobile'}
+              title="Vista móvil"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect
+                  x="7"
+                  y="2.5"
+                  width="10"
+                  height="19"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path d="M11 18.5h2" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </button>
+          </div>
+
           <button
             type="button"
             className="info-button"
@@ -229,7 +323,22 @@ export default function App() {
             <span className="info-button__icon" aria-hidden="true">
               i
             </span>
-            Información
+            <span className="button-label">Información</span>
+          </button>
+          <button
+            type="button"
+            className="settings-button"
+            onClick={() => setSettingsOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <span className="settings-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M4 17h16" stroke="currentColor" strokeWidth="2" />
+                <circle cx="9" cy="7" r="2.2" fill="currentColor" />
+                <circle cx="15" cy="17" r="2.2" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="button-label">Ajustes</span>
           </button>
         </div>
       </header>
@@ -249,9 +358,17 @@ export default function App() {
             </div>
             <strong
               className="origin-card__name"
-              title={`${origin.lat.toFixed(4)}, ${origin.lon.toFixed(4)}`}
+              title={
+                hasOrigin
+                  ? `${origin.lat.toFixed(4)}, ${origin.lon.toFixed(4)}`
+                  : undefined
+              }
             >
-              {geocoding ? 'Buscando calle…' : originName}
+              {!hasOrigin
+                ? 'Marca tu posición'
+                : geocoding
+                  ? 'Buscando calle…'
+                  : originName}
             </strong>
             <form className="origin-search" onSubmit={(event) => void handleStreetSubmit(event)}>
               <input
@@ -272,37 +389,26 @@ export default function App() {
                 {streetSearching ? '…' : 'Ir'}
               </button>
             </form>
-            <small>{originHint}</small>
+            <small>
+              {hasOrigin
+                ? originHint
+                : 'Haz doble clic en el mapa o busca una calle para empezar'}
+            </small>
             {streetError && <small className="origin-error">{streetError}</small>}
           </section>
 
-          <div className="section-heading">
-            <span className="eyebrow">Preferencias</span>
-            <h2>¿Cómo quieres salir?</h2>
-          </div>
-
-          <Controls prefs={prefs} onChange={handlePrefsChange} />
-
-          <button
-            type="button"
-            className="search-button"
-            disabled={loading}
-            onClick={() => void runSearch(origin, prefs)}
-          >
-            {loading ? (
-              <>
-                <span className="spinner spinner--light" />
-                Calculando salidas…
-              </>
-            ) : (
-              <>
-                Buscar salidas
-                <span aria-hidden="true">→</span>
-              </>
-            )}
-          </button>
-
-          {error && <div className="notice notice--error">{error}</div>}
+          {error && (
+            <div className="notice notice--error">
+              <span>{error}</span>
+              <button
+                type="button"
+                className="notice__retry"
+                onClick={() => void runSearch(origin, prefs)}
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           {loading && !data && (
             <div className="skeleton-list" aria-hidden="true">
@@ -314,10 +420,10 @@ export default function App() {
 
           {!loading && !data && !error && (
             <div className="empty-state">
-              <strong>Elige tu salida</strong>
+              <strong>Marca tu posición</strong>
               <p>
-                Ajusta el origen y las preferencias, y pulsa “Buscar salidas” para
-                explorar la red que te rodea.
+                Haz doble clic en el mapa o busca una calle. Las salidas aparecerán
+                automáticamente.
               </p>
             </div>
           )}
@@ -344,6 +450,8 @@ export default function App() {
         <section className="map-panel" aria-label="Mapa de corredores de escape">
           <MapView
             origin={origin}
+            showOrigin={hasOrigin}
+            viewMode={viewMode}
             routes={data?.routes ?? []}
             selectedId={selectedId}
             onSelect={setSelectedId}
@@ -354,13 +462,55 @@ export default function App() {
 
           {selectedRoute && (
             <div className="map-readout">
-              <span>Corredor seleccionado</span>
-              <strong>{selectedRoute.label}</strong>
-              <small>
-                {selectedRoute.escape_time_min} min · QuietScore{' '}
-                {selectedRoute.quiet_score} · Escape Point en{' '}
-                {selectedRoute.escape_point.name}
-              </small>
+              <span className="map-readout__eyebrow">Corredor seleccionado</span>
+              <div className="map-readout__title">
+                <strong>{selectedRoute.label}</strong>
+                <span className="map-readout__direction">
+                  {directionArrow(selectedRoute.direction)} {selectedRoute.direction}
+                </span>
+              </div>
+              <span className="map-readout__point">
+                Escape Point · {selectedRoute.escape_point.name}
+              </span>
+
+              <div className="map-readout__metrics">
+                <div>
+                  <strong>
+                    {formatMinutes(selectedRoute.escape_time_min)}
+                    <em>min</em>
+                  </strong>
+                  <span>Escape Time</span>
+                </div>
+                <div>
+                  <strong>
+                    {formatKm(selectedRoute.distance_to_escape_km)}
+                    <em>km</em>
+                  </strong>
+                  <span>Distancia</span>
+                </div>
+                <div>
+                  <strong style={{ color: quietScoreColor(selectedRoute.quiet_score) }}>
+                    {selectedRoute.quiet_score}
+                    <em>/100</em>
+                  </strong>
+                  <span>QuietScore</span>
+                </div>
+              </div>
+
+              <div className="map-readout__meta">
+                <span
+                  className={`confidence confidence--${selectedRoute.traffic_summary.confidence}`}
+                >
+                  <i />
+                  Confianza {confidenceLabel(selectedRoute.traffic_summary.confidence)}
+                </span>
+                <span>
+                  {selectedRoute.traffic_summary.sources.map(sourceLabel).join(' · ')} ·{' '}
+                  {selectedRoute.traffic_summary.years.length
+                    ? selectedRoute.traffic_summary.years.join(', ')
+                    : 'sin año'}
+                </span>
+              </div>
             </div>
           )}
 
@@ -373,6 +523,86 @@ export default function App() {
         </section>
       </main>
 
+      {viewMode === 'mobile' && (
+        <>
+          <div className="mobile-search-bar">
+            {error && <div className="mobile-search-error">{error}</div>}
+            {streetError && <div className="mobile-search-error">{streetError}</div>}
+            <form
+              className="mobile-search"
+              onSubmit={(event) => void handleStreetSubmit(event)}
+            >
+              <input
+                type="text"
+                value={streetQuery}
+                placeholder="Escribe una calle…"
+                aria-label="Buscar calle de origen"
+                disabled={streetSearching}
+                onChange={(event) => {
+                  setStreetQuery(event.target.value);
+                  setStreetError(null);
+                }}
+              />
+              <button
+                type="submit"
+                className="mobile-search__go"
+                disabled={streetSearching || streetQuery.trim().length === 0}
+              >
+                {streetSearching ? '…' : 'Ir'}
+              </button>
+              {data && (
+                <button
+                  type="button"
+                  className="mobile-search__routes"
+                  onClick={() => setMobileResultsOpen(true)}
+                  aria-expanded={mobileResultsOpen}
+                >
+                  Salidas <span>{data.routes.length}</span>
+                </button>
+              )}
+            </form>
+          </div>
+
+          {mobileResultsOpen && data && (
+            <>
+              <div
+                className="mobile-sheet-backdrop"
+                onClick={() => setMobileResultsOpen(false)}
+              />
+              <section
+                className="mobile-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Salidas"
+              >
+                <div className="mobile-sheet__head">
+                  <div>
+                    <span className="eyebrow">Resultados</span>
+                    <h2>Salidas</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="mobile-sheet__close"
+                    onClick={() => setMobileResultsOpen(false)}
+                    aria-label="Cerrar salidas"
+                  >
+                    ×
+                  </button>
+                </div>
+                <ResultsPanel
+                  routes={data.routes}
+                  selectedId={selectedId}
+                  onSelect={(id) => {
+                    setSelectedId(id);
+                    setMobileResultsOpen(false);
+                  }}
+                />
+              </section>
+            </>
+          )}
+        </>
+      )}
+
       {toast && (
         <div className="toast" role="status">
           <span>{toast}</span>
@@ -381,6 +611,13 @@ export default function App() {
           </button>
         </div>
       )}
+
+      <SettingsModal
+        open={settingsOpen}
+        profile={profile}
+        onSave={handleSettingsSave}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
     </div>

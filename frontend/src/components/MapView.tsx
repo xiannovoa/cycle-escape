@@ -15,13 +15,16 @@ import { escapeHtml, geojsonToLatLngs, stressColor } from '../utils';
 
 interface MapViewProps {
   origin: LatLon;
+  showOrigin: boolean;
+  viewMode: 'desktop' | 'mobile';
   routes: EscapeRoute[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   onOriginChange: (origin: LatLon) => void;
 }
 
-function escapeIcon(name: string, selected: boolean) {
+function escapeIcon(name: string | null | undefined, selected: boolean) {
+  const label = name?.trim() || 'Escape Point';
   const size = selected ? 26 : 20;
   return L.divIcon({
     className: 'escape-icon',
@@ -32,7 +35,7 @@ function escapeIcon(name: string, selected: boolean) {
           selected
             ? `<span class="escape-pin__label">
                 <strong>Escape Point</strong>
-                <em>${escapeHtml(name)}</em>
+                <em>${escapeHtml(label)}</em>
               </span>`
             : ''
         }
@@ -64,9 +67,13 @@ const originIcon = L.divIcon({
   iconAnchor: [11, 26],
 });
 
-function MapClickHandler({ onOriginChange }: { onOriginChange: (origin: LatLon) => void }) {
+function MapDoubleClickHandler({
+  onOriginChange,
+}: {
+  onOriginChange: (origin: LatLon) => void;
+}) {
   useMapEvents({
-    click(event) {
+    dblclick(event) {
       onOriginChange({ lat: event.latlng.lat, lon: event.latlng.lng });
     },
   });
@@ -91,8 +98,21 @@ function FitRoutes({ routes }: { routes: EscapeRoute[] }) {
   return null;
 }
 
+function ResizeOnViewMode({ viewMode }: { viewMode: 'desktop' | 'mobile' }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => map.invalidateSize(), 180);
+    return () => window.clearTimeout(timer);
+  }, [map, viewMode]);
+
+  return null;
+}
+
 export function MapView({
   origin,
+  showOrigin,
+  viewMode,
   routes,
   selectedId,
   onSelect,
@@ -104,6 +124,7 @@ export function MapView({
       zoom={13}
       zoomControl={false}
       scrollWheelZoom
+      doubleClickZoom={false}
       className="map"
     >
       <TileLayer
@@ -112,7 +133,8 @@ export function MapView({
       />
       <ZoomControl position="topright" />
       <ScaleControl position="bottomright" imperial={false} />
-      <MapClickHandler onOriginChange={onOriginChange} />
+      <MapDoubleClickHandler onOriginChange={onOriginChange} />
+      <ResizeOnViewMode viewMode={viewMode} />
       <FitRoutes routes={routes} />
 
       {routes.map((route) => (
@@ -170,7 +192,9 @@ export function MapView({
         );
       })}
 
-      <Marker position={[origin.lat, origin.lon]} icon={originIcon} zIndexOffset={900} />
+      {showOrigin && (
+        <Marker position={[origin.lat, origin.lon]} icon={originIcon} zIndexOffset={900} />
+      )}
     </MapContainer>
   );
 }
