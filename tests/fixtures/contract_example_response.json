@@ -1,0 +1,203 @@
+{
+  "schema_version": "0.1",
+  "request_id": "req_demo_001",
+  "generated_at": "2026-10-22T10:15:00Z",
+  "origin": { "lat": 42.8782, "lon": -8.5448 },
+  "recommended_route_id": "oeste-roxos",
+  "routes": [
+    {
+      "id": "oeste-roxos",
+      "label": "Oeste vía Roxos",
+      "direction": "W",
+      "is_recommended": true,
+      "escape_time_min": 18,
+      "distance_to_escape_km": 6.4,
+      "quiet_score": 84,
+      "avg_road_stress": 42,
+      "escape_point": { "lat": 42.872, "lon": -8.59, "name": "Roxos" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-8.5448, 42.8782],
+          [-8.552, 42.876],
+          [-8.564, 42.874],
+          [-8.578, 42.873],
+          [-8.59, 42.872]
+        ]
+      },
+      "segments": [
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.5448, 42.8782], [-8.552, 42.876]]
+          },
+          "road_name": "Rúa de San Pedro",
+          "highway": "residential",
+          "surface": "asphalt",
+          "road_stress": 74,
+          "imd": 9200,
+          "heavy_pct": 5.1,
+          "traffic_source": "xunta",
+          "traffic_year": 2025,
+          "traffic_confidence": "high"
+        },
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.552, 42.876], [-8.564, 42.874]]
+          },
+          "road_name": "AC-543",
+          "highway": "secondary",
+          "surface": "asphalt",
+          "road_stress": 48,
+          "imd": null,
+          "heavy_pct": null,
+          "traffic_source": "osm_estimate",
+          "traffic_year": null,
+          "traffic_confidence": "low"
+        },
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.564, 42.874], [-8.59, 42.872]]
+          },
+          "road_name": "Camiño de Roxos",
+          "highway": "tertiary",
+          "surface": "asphalt",
+          "road_stress": 18,
+          "imd": 650,
+          "heavy_pct": 1.2,
+          "traffic_source": "xunta",
+          "traffic_year": 2025,
+          "traffic_confidence": "high"
+        }
+      ],
+      "traffic_summary": {
+        "sources": ["xunta", "osm_estimate"],
+        "years": [2025],
+        "measured_share": 0.66,
+        "confidence": "medium"
+      },
+      "warnings": ["Un tramo sin aforo usa estimación OSM"]
+    },
+    {
+      "id": "norte-sigueiro",
+      "label": "Norte hacia Sigüeiro",
+      "direction": "N",
+      "is_recommended": false,
+      "escape_time_min": 24,
+      "distance_to_escape_km": 8.1,
+      "quiet_score": 71,
+      "avg_road_stress": 51,
+      "escape_point": { "lat": 42.92, "lon": -8.525, "name": "Salida norte" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-8.5448, 42.8782],
+          [-8.54, 42.888],
+          [-8.532, 42.9],
+          [-8.525, 42.92]
+        ]
+      },
+      "segments": [
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.5448, 42.8782], [-8.54, 42.888]]
+          },
+          "road_name": "Rúa da Pastoriza",
+          "highway": "residential",
+          "surface": "asphalt",
+          "road_stress": 66,
+          "imd": 7100,
+          "heavy_pct": 3.4,
+          "traffic_source": "xunta",
+          "traffic_year": 2025,
+          "traffic_confidence": "high"
+        },
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.54, 42.888], [-8.525, 42.92]]
+          },
+          "road_name": "CP-0201",
+          "highway": "tertiary",
+          "surface": "asphalt",
+          "road_stress": 36,
+          "imd": null,
+          "heavy_pct": null,
+          "traffic_source": "osm_estimate",
+          "traffic_year": null,
+          "traffic_confidence": "low"
+        }
+      ],
+      "traffic_summary": {
+        "sources": ["xunta", "osm_estimate"],
+        "years": [2025],
+        "measured_share": 0.45,
+        "confidence": "medium"
+      },
+      "warnings": []
+    },
+    {
+      "id": "sur-milladoiro",
+      "label": "Sur hacia O Milladoiro",
+      "direction": "S",
+      "is_recommended": false,
+      "escape_time_min": 31,
+      "distance_to_escape_km": 10.2,
+      "quiet_score": 63,
+      "avg_road_stress": 58,
+      "escape_point": { "lat": 42.845, "lon": -8.57, "name": "O Milladoiro" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-8.5448, 42.8782],
+          [-8.55, 42.865],
+          [-8.56, 42.855],
+          [-8.57, 42.845]
+        ]
+      },
+      "segments": [
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.5448, 42.8782], [-8.56, 42.855]]
+          },
+          "road_name": "N-550",
+          "highway": "trunk",
+          "surface": "asphalt",
+          "road_stress": 88,
+          "imd": 23000,
+          "heavy_pct": 9.8,
+          "traffic_source": "mitma",
+          "traffic_year": 2022,
+          "traffic_confidence": "medium"
+        },
+        {
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-8.56, 42.855], [-8.57, 42.845]]
+          },
+          "road_name": "Rúa do Agro",
+          "highway": "tertiary",
+          "surface": "asphalt",
+          "road_stress": 34,
+          "imd": null,
+          "heavy_pct": null,
+          "traffic_source": "osm_estimate",
+          "traffic_year": null,
+          "traffic_confidence": "low"
+        }
+      ],
+      "traffic_summary": {
+        "sources": ["mitma", "osm_estimate"],
+        "years": [2022],
+        "measured_share": 0.55,
+        "confidence": "medium"
+      },
+      "warnings": ["Aforo de MITMA de 2022"]
+    }
+  ],
+  "warnings": ["Los datos de tráfico son parciales: hay tramos estimados con OSM"]
+}
