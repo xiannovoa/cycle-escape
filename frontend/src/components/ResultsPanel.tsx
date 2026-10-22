@@ -14,7 +14,68 @@ interface ResultsPanelProps {
   onSelect: (id: string) => void;
 }
 
+interface RouteTag {
+  key: string;
+  label: string;
+}
+
+const GOOD_BALANCE_SCORE = 70;
+
 export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps) {
+  const recommended = routes.find((route) => route.is_recommended) ?? routes[0];
+  const minTime = Math.min(...routes.map((route) => route.escape_time_min));
+  const maxTime = Math.max(...routes.map((route) => route.escape_time_min));
+
+  function timeScore(route: EscapeRoute): number {
+    if (maxTime === minTime) return 100;
+    return (100 * (maxTime - route.escape_time_min)) / (maxTime - minTime);
+  }
+
+  function balanceScore(route: EscapeRoute): number {
+    return route.quiet_score * 0.6 + timeScore(route) * 0.4;
+  }
+
+  const fastest = [...routes].sort((a, b) => a.escape_time_min - b.escape_time_min)[0];
+  const quietest = [...routes].sort((a, b) => b.quiet_score - a.quiet_score)[0];
+  const lowestTraffic = [...routes].sort(
+    (a, b) => a.avg_road_stress - b.avg_road_stress,
+  )[0];
+  const bestBalance = [...routes].sort((a, b) => balanceScore(b) - balanceScore(a))[0];
+  const recommendedBalance = recommended ? balanceScore(recommended) : 0;
+
+  const tags = new Map<string, RouteTag[]>();
+  const usedLabels = new Set<string>();
+
+  function addTag(route: EscapeRoute | undefined, key: string, label: string) {
+    if (!route || usedLabels.has(label)) return;
+    const current = tags.get(route.id) ?? [];
+    if (!route.is_recommended && current.length >= 1) return;
+    tags.set(route.id, [...current, { key, label }]);
+    usedLabels.add(label);
+  }
+
+  addTag(fastest, 'fast', 'Más rápida');
+  addTag(quietest, 'quiet', 'Más tranquila');
+  addTag(lowestTraffic, 'traffic', 'Menor tráfico');
+
+  if (bestBalance) {
+    const score = balanceScore(bestBalance);
+    const isGood =
+      bestBalance.is_recommended ||
+      (score >= GOOD_BALANCE_SCORE && score >= recommendedBalance - 10);
+    if (isGood) addTag(bestBalance, 'balance', 'Mejor balance');
+  }
+
+  routes.forEach((route) => {
+    if (!route.is_recommended && !tags.has(route.id)) {
+      tags.set(route.id, [{ key: 'alternative', label: 'Alternativa' }]);
+    }
+  });
+
+  function tagsFor(route: EscapeRoute): RouteTag[] {
+    return tags.get(route.id) ?? [];
+  }
+
   return (
     <section className="results" aria-label="Corredores de escape candidatos">
       <div className="results__head">
@@ -101,6 +162,14 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
                   </strong>
                   <span>QuietScore</span>
                 </div>
+              </div>
+
+              <div className="route-tags">
+                {tagsFor(route).map((tag) => (
+                  <span key={tag.key} className={`route-tag route-tag--${tag.key}`}>
+                    {tag.label}
+                  </span>
+                ))}
               </div>
 
               <div className="route-card__meta">

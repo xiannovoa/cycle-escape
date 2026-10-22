@@ -1,34 +1,5 @@
 import type { SearchPreferences } from '../types';
-
-interface Option {
-  label: string;
-  value: string;
-}
-
-interface SegmentedProps {
-  ariaLabel: string;
-  options: Option[];
-  value: string;
-  onChange: (value: string) => void;
-}
-
-function Segmented({ ariaLabel, options, value, onChange }: SegmentedProps) {
-  return (
-    <div className="segmented" role="group" aria-label={ariaLabel}>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          className={option.value === value ? 'is-active' : ''}
-          aria-pressed={option.value === value}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+import { trafficAversionForPreference } from '../profile';
 
 interface ControlsProps {
   prefs: SearchPreferences;
@@ -41,6 +12,14 @@ export function Controls({ prefs, onChange }: ControlsProps) {
     value: SearchPreferences[K],
   ) {
     onChange({ ...prefs, [key]: value });
+  }
+
+  function setPreference(value: number) {
+    onChange({
+      ...prefs,
+      trafficLambda: value,
+      trafficAversion: trafficAversionForPreference(value),
+    });
   }
 
   return (
@@ -69,30 +48,7 @@ export function Controls({ prefs, onChange }: ControlsProps) {
 
       <div className="control">
         <div className="control__label">
-          <span>Aversión al tráfico</span>
-          <strong>
-            {prefs.trafficAversion <= 0.3
-              ? 'Baja'
-              : prefs.trafficAversion >= 0.75
-                ? 'Alta'
-                : 'Media'}
-          </strong>
-        </div>
-        <Segmented
-          ariaLabel="Aversión al tráfico"
-          value={String(prefs.trafficAversion)}
-          options={[
-            { label: 'Baja', value: '0.2' },
-            { label: 'Media', value: '0.5' },
-            { label: 'Alta', value: '0.85' },
-          ]}
-          onChange={(value) => setField('trafficAversion', Number(value))}
-        />
-      </div>
-
-      <div className="control">
-        <div className="control__label">
-          <span>Prioridad</span>
+          <span>Preferencia de salida</span>
         </div>
         <input
           className="range range--lambda"
@@ -101,15 +57,18 @@ export function Controls({ prefs, onChange }: ControlsProps) {
           max={1}
           step={0.01}
           value={prefs.trafficLambda}
-          aria-label="Prioridad: de salida directa a menor tráfico"
-          title="0 = salida directa · 1 = menor tráfico"
-          onChange={(event) => setField('trafficLambda', Number(event.target.value))}
+          aria-label="Preferencia de salida: de más rápido a menor tráfico"
+          title="0 = más rápido · 1 = menor tráfico"
+          onChange={(event) => setPreference(Number(event.target.value))}
         />
         <div className="range__scale range__scale--lambda">
-          <span>Salida directa</span>
+          <span>Más rápido</span>
           <span>Equilibrada</span>
           <span>Menor tráfico</span>
         </div>
+        <small className="control__hint">
+          Ajusta a la vez la prioridad y la aversión al tráfico.
+        </small>
       </div>
     </div>
   );

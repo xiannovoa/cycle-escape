@@ -1,26 +1,37 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { EscapeApiError, searchEscapeRoutes } from './api';
-import { Controls } from './components/Controls';
 import { InfoModal } from './components/InfoModal';
 import { Legend } from './components/Legend';
 import { MapView } from './components/MapView';
+import { Onboarding } from './components/Onboarding';
 import { ResultsPanel } from './components/ResultsPanel';
+import { SettingsModal } from './components/SettingsModal';
 import { reverseGeocode, searchStreet } from './geocode';
+import {
+  DEFAULT_PROFILE,
+  loadProfile,
+  normalizeProfile,
+  profileToPrefs,
+  saveProfile,
+  type RiderProfile,
+} from './profile';
 import type { EscapeResponse, LatLon, SearchPreferences } from './types';
 
 const DEFAULT_ORIGIN: LatLon = { lat: 42.8782, lon: -8.5448 };
 
-const DEFAULT_PREFS: SearchPreferences = {
-  avgSpeedKmh: 22,
-  trafficAversion: 0.5,
-  trafficLambda: 0.5,
-  surfacePreference: 'asphalt',
-};
+type ViewMode = 'desktop' | 'mobile';
 
 export default function App() {
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    window.matchMedia('(max-width: 700px)').matches ? 'mobile' : 'desktop',
+  );
+  const [profile, setProfile] = useState<RiderProfile | null>(() => loadProfile());
+  const [prefs, setPrefs] = useState<SearchPreferences>(() =>
+    profileToPrefs(loadProfile() ?? DEFAULT_PROFILE),
+  );
   const [origin, setOrigin] = useState<LatLon>(DEFAULT_ORIGIN);
-  const [prefs, setPrefs] = useState<SearchPreferences>(DEFAULT_PREFS);
+  const [hasOrigin, setHasOrigin] = useState(false);
   const [data, setData] = useState<EscapeResponse | null>(null);
   const [source, setSource] = useState<'live' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -34,6 +45,7 @@ export default function App() {
   const [streetSearching, setStreetSearching] = useState(false);
   const [streetError, setStreetError] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const requestId = useRef(0);
   const geocodeRequestId = useRef(0);
@@ -152,9 +164,11 @@ export default function App() {
 
   function handleOriginChange(nextOrigin: LatLon) {
     setOrigin(nextOrigin);
+    setHasOrigin(true);
     setGeocoding(true);
     setStreetError(null);
     clearResults();
+    void runSearch(nextOrigin, prefs);
   }
 
   async function handleStreetSubmit(event: FormEvent<HTMLFormElement>) {
@@ -175,15 +189,33 @@ export default function App() {
 
     skipNextGeocode.current = true;
     setOrigin(result.origin);
+    setHasOrigin(true);
     setOriginName(result.name);
     setOriginLocality(result.locality);
     setGeocoding(false);
     setStreetQuery('');
     clearResults();
+    void runSearch(result.origin, prefs);
   }
 
-  function handlePrefsChange(nextPrefs: SearchPreferences) {
+  function handleProfileComplete(nextProfile: RiderProfile) {
+    const normalized = normalizeProfile(nextProfile);
+    saveProfile(normalized);
+    setProfile(normalized);
+    setPrefs(profileToPrefs(normalized));
+  }
+
+  function handleSettingsSave(nextProfile: RiderProfile) {
+    const normalized = normalizeProfile(nextProfile);
+    const nextPrefs = profileToPrefs(normalized);
+    saveProfile(normalized);
+    setProfile(normalized);
     setPrefs(nextPrefs);
+    setSettingsOpen(false);
+    clearResults();
+    if (hasOrigin) {
+      void runSearch(origin, nextPrefs);
+    }
   }
 
   const selectedRoute = data?.routes.find((route) => route.id === selectedId) ?? null;
@@ -192,8 +224,12 @@ export default function App() {
     : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Toca el mapa para cambiar el origen`;
   const sourceLabelText = source === 'live' ? 'Datos en vivo' : 'Sin buscar';
 
+  if (!profile) {
+    return <Onboarding onComplete={handleProfileComplete} />;
+  }
+
   return (
-    <div className="app">
+    <div className={`app app--${viewMode}`}>
       <header className="topbar">
         <div className="brand">
           <span className="brand__mark" aria-hidden="true">
@@ -209,7 +245,7 @@ export default function App() {
             </svg>
           </span>
           <div className="brand__text">
-            <h1>Cycle Escape</h1>
+            <h1>Cyclout</h1>
             <p>Sal de la ciudad. Encuentra carreteras tranquilas.</p>
           </div>
         </div>
@@ -220,6 +256,50 @@ export default function App() {
             {sourceLabelText}
           </span>
           <span className="city-badge">Santiago de Compostela</span>
+
+          <div className="view-switch" role="group" aria-label="Vista de la aplicación">
+            <button
+              type="button"
+              className={viewMode === 'desktop' ? 'is-active' : ''}
+              onClick={() => setViewMode('desktop')}
+              aria-pressed={viewMode === 'desktop'}
+              title="Vista PC"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect
+                  x="3"
+                  y="4"
+                  width="18"
+                  height="12"
+                  rx="1.5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path d="M12 16v4M8 20h8" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={viewMode === 'mobile' ? 'is-active' : ''}
+              onClick={() => setViewMode('mobile')}
+              aria-pressed={viewMode === 'mobile'}
+              title="Vista móvil"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect
+                  x="7"
+                  y="2.5"
+                  width="10"
+                  height="19"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path d="M11 18.5h2" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </button>
+          </div>
+
           <button
             type="button"
             className="info-button"
@@ -229,7 +309,22 @@ export default function App() {
             <span className="info-button__icon" aria-hidden="true">
               i
             </span>
-            Información
+            <span className="button-label">Información</span>
+          </button>
+          <button
+            type="button"
+            className="settings-button"
+            onClick={() => setSettingsOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <span className="settings-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M4 17h16" stroke="currentColor" strokeWidth="2" />
+                <circle cx="9" cy="7" r="2.2" fill="currentColor" />
+                <circle cx="15" cy="17" r="2.2" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="button-label">Ajustes</span>
           </button>
         </div>
       </header>
@@ -249,9 +344,17 @@ export default function App() {
             </div>
             <strong
               className="origin-card__name"
-              title={`${origin.lat.toFixed(4)}, ${origin.lon.toFixed(4)}`}
+              title={
+                hasOrigin
+                  ? `${origin.lat.toFixed(4)}, ${origin.lon.toFixed(4)}`
+                  : undefined
+              }
             >
-              {geocoding ? 'Buscando calle…' : originName}
+              {!hasOrigin
+                ? 'Marca tu posición'
+                : geocoding
+                  ? 'Buscando calle…'
+                  : originName}
             </strong>
             <form className="origin-search" onSubmit={(event) => void handleStreetSubmit(event)}>
               <input
@@ -272,37 +375,26 @@ export default function App() {
                 {streetSearching ? '…' : 'Ir'}
               </button>
             </form>
-            <small>{originHint}</small>
+            <small>
+              {hasOrigin
+                ? originHint
+                : 'Toca el mapa o busca una calle para empezar'}
+            </small>
             {streetError && <small className="origin-error">{streetError}</small>}
           </section>
 
-          <div className="section-heading">
-            <span className="eyebrow">Preferencias</span>
-            <h2>¿Cómo quieres salir?</h2>
-          </div>
-
-          <Controls prefs={prefs} onChange={handlePrefsChange} />
-
-          <button
-            type="button"
-            className="search-button"
-            disabled={loading}
-            onClick={() => void runSearch(origin, prefs)}
-          >
-            {loading ? (
-              <>
-                <span className="spinner spinner--light" />
-                Calculando salidas…
-              </>
-            ) : (
-              <>
-                Buscar salidas
-                <span aria-hidden="true">→</span>
-              </>
-            )}
-          </button>
-
-          {error && <div className="notice notice--error">{error}</div>}
+          {error && (
+            <div className="notice notice--error">
+              <span>{error}</span>
+              <button
+                type="button"
+                className="notice__retry"
+                onClick={() => void runSearch(origin, prefs)}
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           {loading && !data && (
             <div className="skeleton-list" aria-hidden="true">
@@ -314,10 +406,9 @@ export default function App() {
 
           {!loading && !data && !error && (
             <div className="empty-state">
-              <strong>Elige tu salida</strong>
+              <strong>Marca tu posición</strong>
               <p>
-                Ajusta el origen y las preferencias, y pulsa “Buscar salidas” para
-                explorar la red que te rodea.
+                Toca el mapa o busca una calle. Las salidas aparecerán automáticamente.
               </p>
             </div>
           )}
@@ -344,6 +435,8 @@ export default function App() {
         <section className="map-panel" aria-label="Mapa de corredores de escape">
           <MapView
             origin={origin}
+            showOrigin={hasOrigin}
+            viewMode={viewMode}
             routes={data?.routes ?? []}
             selectedId={selectedId}
             onSelect={setSelectedId}
@@ -381,6 +474,13 @@ export default function App() {
           </button>
         </div>
       )}
+
+      <SettingsModal
+        open={settingsOpen}
+        profile={profile}
+        onSave={handleSettingsSave}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
     </div>
