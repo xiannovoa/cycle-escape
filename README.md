@@ -118,8 +118,9 @@ clone el repo y pueda trabajar sin pasos previos. Los artefactos derivados de
 `data/processed/` **no se versionan** (ver `.gitignore`). La normalización, la confianza y
 el matching están documentados en [`docs/data-normalization.md`](docs/data-normalization.md).
 
-Atribución obligatoria en la interfaz: **© OpenStreetMap contributors** y mención a la
-Xunta de Galicia y MITMA como fuentes de los aforos.
+Atribución obligatoria en la interfaz: **© OpenStreetMap contributors**, mención a
+Nominatim para la geocodificación inversa y a la Xunta de Galicia y MITMA como fuentes de
+los aforos.
 
 ---
 
@@ -127,11 +128,13 @@ Xunta de Galicia y MITMA como fuentes de los aforos.
 
 ### Entradas
 
-- Posición de origen: clic en el mapa, geolocalización o coordenadas.
-- Perfil de bicicleta de carretera / preferencia por asfalto.
-- Velocidad media (por defecto, 22 km/h).
+- Posición de origen: clic en el mapa o búsqueda directa de una calle; se muestra el
+  nombre mediante geocodificación de Nominatim (OpenStreetMap). Santiago por defecto.
+- Perfil de bicicleta de carretera con asfalto fijado por defecto.
+- Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
 - Aversión al tráfico (baja / media / alta).
-- Preferencia entre salida directa y salida tranquila.
+- Prioridad continua `λ`: 0 = salida directa, 1 = salida tranquila. Pondera la
+  importancia del componente de tráfico en el ranking.
 
 ### Salidas
 
@@ -153,7 +156,8 @@ Para cada uno:
 - avisos cuando un tramo va estimado.
 
 La ruta recomendada se resalta sobre el mapa y el **Escape Point se muestra de forma muy
-destacada**. El resto de alternativas queda visible pero atenuado.
+destacada**. El resto de alternativas queda visible pero atenuado. La tarjeta recomendada
+se tiñe con el color de la confianza de sus datos de tráfico (verde, ámbar o terracota).
 
 ### Colores de Road Stress
 

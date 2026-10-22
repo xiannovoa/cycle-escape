@@ -24,10 +24,16 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
         </div>
         <span className="results__count">{routes.length}</span>
       </div>
-      <p className="results__hint">
-        Toca un corredor para verlo en el mapa. El recomendado equilibra tiempo y
-        tranquilidad.
-      </p>
+      <p className="results__hint">Toca un corredor para verlo en el mapa.</p>
+
+      <details className="confidence-note">
+        <summary>¿Cómo se calcula la confianza?</summary>
+        <p>
+          Combina la proporción del trazado con aforo oficial y la antigüedad del dato.
+          Alta: cobertura amplia y reciente. Media: parcial o antigua. Baja: predominan
+          los tramos estimados con OpenStreetMap.
+        </p>
+      </details>
 
       <div className="route-list">
         {routes.map((route) => {
@@ -45,6 +51,7 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
               aria-pressed={isSelected}
               className={[
                 'route-card',
+                `confidence--${route.traffic_summary.confidence}`,
                 isSelected ? 'is-selected' : '',
                 route.is_recommended ? 'is-recommended' : '',
               ]
@@ -66,7 +73,12 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
                   <strong>{route.label}</strong>
                   <small>Escape Point · {route.escape_point.name}</small>
                 </span>
-                {route.is_recommended && <span className="rec-badge">Recomendada</span>}
+                <span
+                  className={`confidence confidence--header confidence--${route.traffic_summary.confidence}`}
+                >
+                  <i />
+                  Confianza {confidenceLabel(route.traffic_summary.confidence)}
+                </span>
               </div>
 
               <div className="metrics">
@@ -94,10 +106,7 @@ export function ResultsPanel({ routes, selectedId, onSelect }: ResultsPanelProps
               </div>
 
               <div className="route-card__meta">
-                <span className={`confidence confidence--${route.traffic_summary.confidence}`}>
-                  <i />
-                  Confianza {confidenceLabel(route.traffic_summary.confidence)}
-                </span>
+                {route.is_recommended && <span className="rec-badge">Recomendada</span>}
                 <span className="traffic-meta">
                   {route.traffic_summary.sources.map(sourceLabel).join(' · ')} · {years}
                 </span>
