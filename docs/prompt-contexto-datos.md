@@ -22,11 +22,15 @@ Campos de cada tramo:
 | PK_inicio, PK_fin | Punto kilométrico de inicio y fin del tramo |
 | IMD | Intensidad media diaria (vehículos/día) |
 | Pct_pesados | % de vehículos pesados |
-| Anio | Año del dato (2025 Xunta, 2022 MITMA) |
-| Fuente | "Xunta IMD 2025" o "MITMA 2022" |
+| Anio | Año real del aforo (MITMA 2022; Xunta 2016–2025) |
+| Fuente | "Xunta" o "MITMA" |
 | Nivel | Nivel de tráfico para ciclistas: tranquila (< 2000), moderada (2000–4999), alta (5000–9999), muy_alta (≥ 10000) |
 
 Reparto: 6 tramos tranquilos, 13 moderados, 3 altos y 17 muy altos.
+
+> Nota: la capa de la Xunta se publica como «IMD 2025» (año de edición), pero el año
+> real de cada observación (`Anho_afo_u`) va de 2016 a 2025. `Anio` guarda el año real
+> del aforo; `Fuente` indica solo la fuente.
 
 ### Qué contiene
 **Xunta (IMD 2025), 22 tramos**: carreteras autonómicas AC-250, AC-261, AC-453, AC-543, AC-841 y AC-960. Descargadas de la capa ArcGIS de la Xunta (`ideg.xunta.gal/.../Mapa_Trafico_OGC/MapServer/9`). Campos originales: IMD_2025, P_porcenta (% pesados), Pq_inicio/Pq_fin (PK), Treito (nombre del tramo).

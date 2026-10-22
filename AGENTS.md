@@ -6,6 +6,7 @@ improvisar.
 
 Contexto de producto, arquitectura y puesta en marcha: [`README.md`](README.md).
 Contrato de API: [`docs/api-contract.md`](docs/api-contract.md).
+Normalización de datos de tráfico: [`docs/data-normalization.md`](docs/data-normalization.md).
 Guion de demo: [`docs/demo-script.md`](docs/demo-script.md).
 
 ---
@@ -146,12 +147,13 @@ frontend/src/
 
 ## 7. Datos
 
-- Xunta de Galicia: aforos principalmente de 2025.
+- Xunta de Galicia: aforos de 2016–2025 (edición 2025); el año real se conserva por tramo.
 - MITMA: dataset principalmente de 2022; incluye N-550 y N-525 alrededor de Santiago.
-- Los datos crudos y procesados **no se commitean** (`/data/raw/**`, `/data/processed/**`).
+- Los conjuntos pequeños de `data/raw/` **sí se versionan** (ver `data/raw/README.md`);
+  los artefactos derivados de `data/processed/` **no se commitean**.
 - No se inventan mediciones. Un valor estimado se etiqueta como estimado.
 - Mantener trazabilidad: fuente, año y método de estimación.
-- Documentar la normalización en `docs/` cuando esté disponible.
+- La normalización, la confianza y el matching se documentan en `docs/data-normalization.md`.
 
 ---
 
@@ -177,7 +179,8 @@ frontend/src/
   y en español o inglés, pero consistente.
 - Integración mediante Pull Request a `main`, con al menos una revisión.
 - No hacer force-push a `main`.
-- No commitear `node_modules/`, `.venv/`, datos crudos, ficheros temporales ni secretos.
+- No commitear `node_modules/`, `.venv/`, `data/processed/`, ficheros temporales ni secretos.
+  Los datos pequeños de `data/raw/` sí se versionan (ver `data/raw/README.md`).
 - Un PR debe tener un alcance pequeño y explicar qué cambia y cómo probarlo.
 - Si un cambio afecta al contrato, se indica explícitamente en el PR y se avisa al equipo.
 

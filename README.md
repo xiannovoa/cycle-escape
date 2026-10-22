@@ -110,12 +110,13 @@ nivel de confianza. La interfaz debe poder distinguir "medido" de "estimado".
 | Fuente | Qué aporta | Uso actual | Año / cobertura |
 |---|---|---|---|
 | OpenStreetMap + OSMnx | Red viaria, geometría, tipo, superficie, carriles, velocidad, restricciones | Grafo base de routing y estimación de estrés | Actual |
-| Xunta de Galicia | Observaciones oficiales de tráfico, segmentos GeoJSON, IMD, % pesados | Enriquecimiento de carreteras gallegas | Principalmente 2025 |
+| Xunta de Galicia | Observaciones oficiales de tráfico, segmentos GeoJSON, IMD, % pesados | Enriquecimiento de carreteras gallegas | Aforos de 2016–2025 (edición 2025) |
 | MITMA | Aforos de carreteras nacionales, IMD, ligeros, pesados, geometría | Enriquecimiento de N-550 y N-525 en el entorno de Santiago | Principalmente 2022 |
 
-Los datos crudos y procesados **no se versionan** en el repositorio (ver `.gitignore`).
-Cada desarrollador los obtiene localmente. La documentación detallada de normalización y
-matching corresponde al área de datos.
+Los conjuntos pequeños de `data/raw/` (~3,2 MB) **sí se versionan** para que cualquiera
+clone el repo y pueda trabajar sin pasos previos. Los artefactos derivados de
+`data/processed/` **no se versionan** (ver `.gitignore`). La normalización, la confianza y
+el matching están documentados en [`docs/data-normalization.md`](docs/data-normalization.md).
 
 Atribución obligatoria en la interfaz: **© OpenStreetMap contributors**, mención a
 Nominatim para la geocodificación inversa y a la Xunta de Galicia y MITMA como fuentes de
@@ -193,7 +194,7 @@ cycle-escape/
 ├── frontend/          # Interfaz React + mapa (Javi)
 ├── backend/app/       # FastAPI, OSM/routing, scoring (Xián)
 ├── data/
-│   ├── raw/           # GeoJSON originales de Xunta y MITMA (no versionado)
+│   ├── raw/           # GeoJSON de Xunta y MITMA + capa IMD unificada (versionado)
 │   └── processed/     # Datos normalizados y enriquecidos (no versionado)
 ├── tests/             # Pruebas del backend
 ├── docs/              # Contrato de API, guion de demo y documentación compartida
@@ -269,9 +270,10 @@ uvicorn app.main:app --reload --app-dir backend
 
 ### Datos
 
-Los GeoJSON de Xunta y MITMA no están en el repositorio. Se solicitan al responsable de
-datos o se descargan de las fuentes oficiales y se colocan en `data/raw/xunta/` y
-`data/raw/mitma/`.
+Los GeoJSON de Xunta y MITMA ya están versionados en `data/raw/` (conjuntos pequeños).
+La capa unificada `data/raw/imd_santiago.geojson` se regenera con
+`python data/build_imd_dataset.py`. Los artefactos derivados deben ir a
+`data/processed/`, que no se versiona.
 
 ---
 
@@ -336,6 +338,7 @@ Fuera de alcance:
 
 - [`AGENTS.md`](AGENTS.md): reglas de colaboración, propiedad del código y convenciones.
 - [`docs/api-contract.md`](docs/api-contract.md): propuesta de contrato HTTP/JSON.
+- [`docs/data-normalization.md`](docs/data-normalization.md): normalización, confianza y matching de los datos de tráfico.
 - [`docs/demo-script.md`](docs/demo-script.md): guion y plan B para la presentación.
 
 ---

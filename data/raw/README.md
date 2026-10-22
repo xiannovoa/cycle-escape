@@ -1,6 +1,6 @@
 # Datos en crudo (`data/raw`)
 
-Conxuntos de datos de entrada do proxecto. Son ficheiros pequenos (~2,8 MB en total),
+Conxuntos de datos de entrada do proxecto. Son ficheiros pequenos (~3,2 MB en total),
 por iso se versionan no repositorio: calquera persoa do equipo que clone o repo
 ten todo o necesario para traballar sen pasos previos.
 
@@ -32,8 +32,9 @@ data/raw/
 ## `imd_santiago.geojson` — capa IMD unificada
 
 Capa única (`FeatureCollection`, EPSG:4326) con **39 tramos** `LineString` que combina os
-aforos da **Xunta (2025)** e de **MITMA (2022)**. É o ficheiro de entrada para o matching
-co grafo de OSM no backend.
+aforos da **Xunta** (observacións de 2016–2025) e de **MITMA** (2022). É o ficheiro de
+entrada para o matching co grafo de OSM no backend. Xérase de forma reproducible con
+`python data/build_imd_dataset.py` a partir das fontes de `xunta/` e `mitma/`.
 
 | Campo | Descrición |
 |---|---|
@@ -42,14 +43,17 @@ co grafo de OSM no backend.
 | `PK_inicio`, `PK_fin` | Punto quilométrico de inicio e fin |
 | `IMD` | Intensidade media diaria (vehículos/día) |
 | `Pct_pesados` | Porcentaxe de vehículos pesados |
-| `Anio` | Ano do dato (2025 Xunta, 2022 MITMA) |
-| `Fuente` | `Xunta IMD 2025` ou `MITMA 2022` |
+| `Anio` | Ano real do aforo (MITMA 2022; Xunta 2016–2025) |
+| `Fuente` | `Xunta` ou `MITMA` |
 | `Nivel` | `tranquila` (< 2000), `moderada` (2000–4999), `alta` (5000–9999), `muy_alta` (≥ 10000) |
 
 Reparto: 6 tramos tranquilos, 13 moderados, 3 altos e 17 moi altos.
 
-> Limitacións coñecidas e detalle do método de construción: ver
-> [`docs/prompt-contexto-datos.md`](../../docs/prompt-contexto-datos.md).
+> A confianza (`traffic_confidence`) non vai no GeoJSON: calcúlaa
+> `backend/app/data_loader.py` a partir da fonte e do ano real. Esquema canónico,
+> regras de confianza, validación e limitacións:
+> [`docs/data-normalization.md`](../../docs/data-normalization.md).
+> Contexto orixinal dos datos: [`docs/prompt-contexto-datos.md`](../../docs/prompt-contexto-datos.md).
 
 ## `mitma/` — intensidades de tráfico
 
