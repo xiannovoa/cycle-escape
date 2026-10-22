@@ -2,6 +2,7 @@
 
 > Documento de trabajo para el equipo. Objetivo: una demo de **3 minutos** que explique el
 > problema, muestre el producto y deje claro qué es una estimación y qué está medido.
+> Proyecto desarrollado para el **Hackathon de la ETSE 2026**.
 >
 > **Estado:** guion actualizado a la v0.1. Las cifras de ejemplo corresponden a la caché v2
 > de Santiago, origen en el centro, 22 km/h, aversión alta (0,85) y prioridad 0,65. Si al

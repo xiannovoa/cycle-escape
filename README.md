@@ -15,6 +15,9 @@ El MVP y la demo del hackathon se centran en **Santiago de Compostela**, pero la
 arquitectura no está atada a la ciudad: el origen, los datos de tráfico y la red viaria son
 parámetros de entrada.
 
+> **Hackathon de la ETSE 2026.** Cycle Escape es un proyecto desarrollado para el
+> Hackathon de la ETSE 2026.
+
 ---
 
 ## Qué es y qué no es
@@ -380,6 +383,7 @@ Fuera de alcance:
 - [`docs/api-contract.md`](docs/api-contract.md): contrato HTTP/JSON v0.1 implementado.
 - [`docs/data-normalization.md`](docs/data-normalization.md): normalización, confianza y matching de los datos de tráfico.
 - [`docs/demo-script.md`](docs/demo-script.md): guion y plan B para la presentación.
+- [`docs/github-metadata.md`](docs/github-metadata.md): descripción, website y topics del repositorio.
 
 ---
 
