@@ -21,6 +21,7 @@ from app.data_loader import (
     is_bike_suitable,
     keep_largest_component,
 )
+from app.scoring import score_graph_edges
 
 
 # --- Aptitud ciclista ------------------------------------------------------
@@ -202,6 +203,13 @@ def test_downloads_real_santiago_graph(tmp_path) -> None:
     assert graph.number_of_edges() > 100
     assert all(
         is_bike_suitable(attrs) for _, _, attrs in graph.edges(data=True)
+    )
+
+    score_graph_edges(graph)
+    assert all(
+        0 <= attrs["road_stress"] <= 100
+        and 0 <= attrs["quiet_score"] <= 100
+        for _, _, attrs in graph.edges(data=True)
     )
 
     path = cache_path(SANTIAGO_CENTER, 600, "drive", tmp_path)
