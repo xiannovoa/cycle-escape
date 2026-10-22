@@ -19,8 +19,8 @@ Cycle Escape ayuda a un ciclista de carretera que está en una ciudad desconocid
 El MVP se demuestra en Santiago de Compostela. La arquitectura no debe quedar hardcodeada
 a esa ciudad más allá de los datos de ejemplo y la configuración de la demo.
 
-Es un hackathon de **un día**. La prioridad es una demo clara y fiable, no una arquitectura
-perfecta.
+Es un hackathon de **un día** (Hackathon de la ETSE 2026). La prioridad es una demo clara y
+fiable, no una arquitectura perfecta.
 
 ---
 
