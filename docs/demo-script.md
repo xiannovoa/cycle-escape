@@ -84,7 +84,7 @@ Señalar en pantalla:
    ciudad: es donde empieza una red que se mantiene tranquila los siguientes kilómetros."
 2. **Colores**: "Rojo es estrés alto, naranja medio-alto, amarillo transición y verde
    tranquilidad. El color sale del Road Stress de cada tramo."
-3. **Métricas**: "18 minutos y 6,4 km hasta el Escape Point. QuietScore 84 después de
+3. **Métricas**: "13 minutos y 4,8 km hasta el Escape Point. QuietScore 84 después de
    salir."
 4. **Alternativas**: "Norte y sur quedan como opciones, pero con más tiempo o más tráfico."
 
