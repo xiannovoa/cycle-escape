@@ -1,4 +1,5 @@
 import { buildMockResponse } from './mock';
+import { resolveRouteConfidence } from './utils';
 import type {
   EscapeResponse,
   EscapeRoute,
@@ -78,6 +79,19 @@ function normalizeRoute(route: EscapeRoute, index: number): EscapeRoute {
           },
         ];
 
+  const years =
+    summary?.years ??
+    segments
+      .map((segment) => segment.traffic_year)
+      .filter((year): year is number => year !== null);
+  const measuredShare = summary?.measured_share ?? 0;
+  const confidence = resolveRouteConfidence(
+    measuredShare,
+    years,
+    segments,
+    summary?.confidence ?? 'low',
+  );
+
   return {
     ...route,
     id: route.id || `route-${index}`,
@@ -97,9 +111,9 @@ function normalizeRoute(route: EscapeRoute, index: number): EscapeRoute {
     segments,
     traffic_summary: {
       sources: summary?.sources ?? [fallbackSource],
-      years: summary?.years ?? [],
-      measured_share: summary?.measured_share ?? 0,
-      confidence: summary?.confidence ?? 'low',
+      years,
+      measured_share: measuredShare,
+      confidence,
     },
     warnings: Array.isArray(route.warnings) ? route.warnings : [],
   };

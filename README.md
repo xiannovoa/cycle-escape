@@ -133,8 +133,8 @@ los aforos.
 - Perfil de bicicleta de carretera con asfalto fijado por defecto.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
 - Aversión al tráfico (baja / media / alta).
-- Prioridad continua `λ`: 0 = salida directa, 1 = salida tranquila. Pondera la
-  importancia del componente de tráfico en el ranking.
+- Prioridad continua: de **salida directa** (0) a **menor tráfico** (1). Pondera el
+  tiempo frente al QuietScore al elegir el corredor recomendado.
 
 ### Salidas
 

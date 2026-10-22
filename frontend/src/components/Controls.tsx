@@ -101,14 +101,14 @@ export function Controls({ prefs, onChange }: ControlsProps) {
           max={1}
           step={0.01}
           value={prefs.trafficLambda}
-          aria-label="Peso lambda del componente de tráfico"
-          title="0 = prioriza rapidez · 1 = prioriza tranquilidad"
+          aria-label="Prioridad: de salida directa a menor tráfico"
+          title="0 = salida directa · 1 = menor tráfico"
           onChange={(event) => setField('trafficLambda', Number(event.target.value))}
         />
         <div className="range__scale range__scale--lambda">
-          <span>Directa</span>
+          <span>Salida directa</span>
           <span>Equilibrada</span>
-          <span>Tranquila</span>
+          <span>Menor tráfico</span>
         </div>
       </div>
     </div>

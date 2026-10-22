@@ -238,12 +238,13 @@ Reglas de datos:
 
 | Valor | Criterio orientativo |
 |---|---|
-| `high` | Aforo oficial reciente y matching geométrico fiable |
-| `medium` | Aforo oficial antiguo, cobertura parcial o matching dudoso |
-| `low` | Sin aforo; Road Stress estimado solo con atributos OSM |
+| `high` | Al menos un 30% del trazado con aforo reciente y buena base de atributos OSM |
+| `medium` | Cobertura parcial o antigua, o estimaciones OSM con atributos suficientes |
+| `low` | Sin aforo medido y con información OSM escasa |
 
-> Estos umbrales debe validarlos Eva. La UI solo necesita los tres niveles y su
-> explicación; no debe inferir precisión que los datos no tienen.
+> La agregación de ruta combina `measured_share`, los años de los aforos y la confianza
+> de los segmentos. Estos umbrales son una política de producto y deben validarse con
+> Eva; la UI solo muestra los tres niveles y su explicación.
 
 ---
 
