@@ -41,7 +41,6 @@ export default function App() {
   const [origin, setOrigin] = useState<LatLon>(DEFAULT_ORIGIN);
   const [hasOrigin, setHasOrigin] = useState(false);
   const [data, setData] = useState<EscapeResponse | null>(null);
-  const [source, setSource] = useState<'live' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +88,6 @@ export default function App() {
       if (currentRequest !== requestId.current) return;
 
       setData(result.response);
-      setSource(result.source);
       setSelectedId(null);
     } catch (searchError) {
       if (currentRequest !== requestId.current) return;
@@ -100,14 +98,12 @@ export default function App() {
           searchError.code === 'NO_ROUTES_FOUND'
         ) {
           setData(null);
-          setSource(null);
           setSelectedId(null);
           showToast('No hay datos de carreteras para esta zona. Prueba con otro origen.');
           return;
         }
         if (searchError.code === 'DATA_NOT_READY') {
           setData(null);
-          setSource(null);
           setSelectedId(null);
           showToast('El backend todavía no tiene datos cargados.');
           return;
@@ -129,7 +125,6 @@ export default function App() {
     requestId.current += 1;
     setLoading(false);
     setData(null);
-    setSource(null);
     setSelectedId(null);
     setError(null);
     setToast(null);
@@ -232,8 +227,6 @@ export default function App() {
   const originHint = geocoding
     ? 'OpenStreetMap'
     : `${originLocality && originLocality !== originName ? `${originLocality} · ` : ''}Haz doble clic en el mapa para cambiar el origen`;
-  const sourceLabelText = source === 'live' ? 'Datos en vivo' : 'Sin buscar';
-
   useEffect(() => {
     if (viewMode === 'desktop') setMobileResultsOpen(false);
   }, [viewMode]);
@@ -265,12 +258,6 @@ export default function App() {
         </div>
 
         <div className="topbar__meta">
-          <span className={`source-badge source-badge--${source ?? 'loading'}`}>
-            <i />
-            {sourceLabelText}
-          </span>
-          <span className="city-badge">Santiago de Compostela</span>
-
           <div className="view-switch" role="group" aria-label="Vista de la aplicación">
             <button
               type="button"

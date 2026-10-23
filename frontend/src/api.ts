@@ -1,4 +1,4 @@
-import { haversineKm, resolveRouteConfidence } from './utils';
+import { resolveRouteConfidence } from './utils';
 import type {
   EscapeResponse,
   EscapeRoute,
@@ -15,9 +15,6 @@ const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').re
   /\/+$/,
   '',
 );
-
-//: Los Escape Points demasiado cerca del origen siguen dentro del centro urbano.
-const MIN_ESCAPE_DISTANCE_KM = 1.5;
 
 export class EscapeApiError extends Error {
   code: string;
@@ -134,20 +131,7 @@ function normalizeResponse(raw: EscapeResponse, fallbackOrigin: LatLon): EscapeR
     );
   }
 
-  const routes = raw.routes
-    .map(normalizeRoute)
-    .filter(
-      (route) =>
-        haversineKm(fallbackOrigin, route.escape_point) >= MIN_ESCAPE_DISTANCE_KM,
-    );
-
-  if (routes.length === 0) {
-    throw new EscapeApiError(
-      'NO_ROUTES_FOUND',
-      'No hay rutas con un Escape Point fuera del centro urbano.',
-      404,
-    );
-  }
+  const routes = raw.routes.map(normalizeRoute);
 
   const recommended =
     raw.recommended_route_id && routes.some((route) => route.id === raw.recommended_route_id)

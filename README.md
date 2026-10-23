@@ -48,9 +48,9 @@ Los kilómetros posteriores al Escape Point también deben mantenerse razonablem
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
 
-En el MVP se exige que el punto esté a **más de 1,5 km del origen** y que los siguientes
-**5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
-trazado con estrés ≤ 30** y fuera de una zona urbana densa.
+En el MVP se exige que los siguientes **5 km** mantengan un QuietScore medio de al menos
+**80**, con al menos el **80% del trazado con estrés ≤ 30** y fuera de una zona urbana
+densa.
 
 ### Escape Time
 
@@ -270,6 +270,18 @@ VITE_API_URL=http://host:puerto
 
 Si la API falla o no hay cobertura para el origen, la interfaz muestra un aviso y no usa
 datos simulados.
+
+### Despliegue en Vercel
+
+El frontend se puede publicar en Vercel con una función serverless que hace de proxy
+`/api` hacia el backend público, sin CORS y sin exponer la URL del backend al navegador.
+
+La guía completa está en [`docs/deploy-vercel.md`](docs/deploy-vercel.md). Resumen:
+
+- Vercel aloja **solo el frontend**; el backend debe estar público aparte.
+- Root Directory: `frontend`.
+- Variable de entorno `BACKEND_URL` con la URL base del backend.
+- La configuración está en `frontend/vercel.json` y `frontend/api/[...path].js`.
 
 ### Backend
 
