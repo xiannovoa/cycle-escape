@@ -52,9 +52,13 @@ Los kilómetros posteriores al Escape Point también deben mantenerse razonablem
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
 
-En el MVP se exige que el punto esté a **más de 1,5 km del origen** y que los siguientes
-**5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
-trazado con estrés ≤ 30** y fuera de una zona urbana densa.
+En el MVP, cada candidato se valida sobre los **5 km posteriores**: el QuietScore medio
+debe ser de al menos **70**, al menos el **80% del trazado debe tener estrés ≤ 40** y no
+puede aparecer ningún tramo con estrés extremo (≥ 75). También se comprueba que el punto
+quede fuera de una zona urbana densa.
+
+Si ningún punto cumple todos los criterios, se devuelve la mejor estimación disponible,
+marcada como estimada y acompañada de un aviso.
 
 ### Escape Time
 
@@ -207,14 +211,14 @@ routing. El significado (rojo = peor) no debe invertirse.
 | Contrato | JSON sobre HTTP, geometrías GeoJSON |
 
 Se prioriza la simplicidad: sin autenticación, sin base de datos, sin cuentas de usuario y
-sin frameworks de estado pesados. Es un hackathon de un día.
+sin frameworks de estado pesados. El MVP se desarrolló durante un hackathon de un día.
 
 ---
 
 ## Estructura del repositorio
 
 ```text
-cycle-escape/
+cyclout/
 ├── frontend/          # Interfaz React + mapa
 ├── backend/app/       # FastAPI, OSM/routing, scoring
 ├── data/
@@ -253,7 +257,7 @@ simulados: si el backend no responde, muestra un error y no inventa resultados.
 
 - Node.js 20 o superior (probado con Node 22) y npm.
 - Python 3.11 o superior.
-- Conexión a internet para las teselas del mapa.
+- Conexión a internet para generar inicialmente el grafo OSM y cargar las teselas del mapa.
 
 ### Frontend
 
@@ -285,11 +289,20 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r backend/requirements.txt
+
+cd backend
+python -m app.graph_loader
+cd ..
+
 uvicorn app.main:app --reload --app-dir backend
 ```
 
-> El backend está en construcción. `requirements.txt` y los módulos de `backend/app/` se
-> completarán durante el hackathon.
+La primera ejecución de `app.graph_loader` descarga y prepara la red viaria de Santiago
+desde OpenStreetMap. El grafo se guarda en caché local en `tmp/osm/` y las ejecuciones
+posteriores lo reutilizan.
+
+El endpoint `GET /api/health` permite comprobar que el grafo está cargado y que las capas
+de tráfico están disponibles.
 
 ### Datos
 
