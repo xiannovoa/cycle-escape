@@ -8,12 +8,7 @@
     "backend": {
       "root": "./",
       "framework": "fastapi",
-      "entrypoint": "main:app",
-      "excludeFiles": [
-        "frontend/**",
-        "tests/**",
-        "docs/**"
-      ]
+      "entrypoint": "main:app"
     }
   },
   "rewrites": [
