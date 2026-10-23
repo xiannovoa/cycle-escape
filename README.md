@@ -5,18 +5,19 @@
 > "Estoy en una ciudad que no conozco. ¿Por qué dirección debería salir para alcanzar
 > carreteras tranquilas y con poco tráfico lo antes posible?"
 
+**🥉 3.er puesto — Hackathon ETSE (2026)**
+
 Cyclout es una aplicación web para ciclistas de carretera que visitan una ciudad que
 no conocen. En lugar de pedir un destino, el usuario indica dónde está y cómo le gusta
 rodar. La aplicación analiza la red viaria de alrededor y propone varios **corredores de
 escape** hacia carreteras tranquilas, explicando cuánto tarda en salir de la ciudad y qué
 nivel de tráfico encontrará después.
 
-El MVP y la demo del hackathon se centran en **Santiago de Compostela**, pero la
-arquitectura no está atada a la ciudad: el origen, los datos de tráfico y la red viaria son
-parámetros de entrada.
+El MVP se desarrolló durante el hackathon utilizando **Santiago de Compostela** como ciudad
+de demostración. La arquitectura no está atada a la ciudad: el origen, los datos de tráfico
+y la red viaria son parámetros de entrada.
 
-> **Hackathon de la ETSE 2026.** Cyclout es un proyecto desarrollado para el
-> Hackathon de la ETSE 2026.
+![Interfaz de Cyclout mostrando corredores de escape en Santiago de Compostela](docs/images/cyclout-demo.png)
 
 ---
 
@@ -148,12 +149,8 @@ calle, las rutas se recalculan automáticamente con las preferencias guardadas.
   nombre mediante geocodificación de Nominatim (OpenStreetMap). Santiago por defecto.
 - Perfil de bicicleta de carretera con asfalto fijado por defecto.
 - Velocidad media entre 10 y 40 km/h (por defecto, 22 km/h).
-- Perfil local con velocidad y preferencia de salida (0 = más rápido, 1 = menor tráfico).
-  El cliente traduce esa preferencia a `traffic_lambda` y deriva `traffic_aversion` para el
-  backend.
-- Superficie (`asphalt` / `mixed` / `any`): se guarda en el perfil y viaja en el contrato;
-  en v0.1 el Road Stress ya penaliza las superficies no asfaltadas, pero no se usa como
-  filtro duro.
+- Preferencia de salida: de **más rápido** (0) a **menor tráfico** (1). Ajusta a la vez
+  el peso del tiempo frente al QuietScore y la aversión al tráfico.
 
 Estos parámetros se configuran en el onboarding o en Ajustes, no en cada consulta.
 
@@ -200,7 +197,7 @@ routing. El significado (rojo = peor) no debe invertirse.
 
 ---
 
-## Stack
+## Stack técnico
 
 | Capa | Tecnología |
 |---|---|
@@ -218,8 +215,8 @@ sin frameworks de estado pesados. Es un hackathon de un día.
 
 ```text
 cycle-escape/
-├── frontend/          # Interfaz React + mapa (Javi)
-├── backend/app/       # FastAPI, OSM/routing, scoring (Xián)
+├── frontend/          # Interfaz React + mapa
+├── backend/app/       # FastAPI, OSM/routing, scoring
 ├── data/
 │   ├── raw/           # GeoJSON de Xunta y MITMA + capa IMD unificada (versionado)
 │   └── processed/     # Datos normalizados y enriquecidos (no versionado)
@@ -233,12 +230,10 @@ cycle-escape/
 
 ## API
 
-El contrato detallado está en [`docs/api-contract.md`](docs/api-contract.md) y está
-implementado en `backend/app/models.py`.
+El contrato detallado está en [`docs/api-contract.md`](docs/api-contract.md).
 
-Resumen: el frontend envía el origen y las preferencias, y recibe una ruta recomendada más
-alternativas, con geometría GeoJSON, Escape Point, métricas y metadatos de tráfico. La API
-expone `GET /api/health` para diagnóstico y `POST /api/escape-routes` para la búsqueda.
+Resumen: el frontend enviará el origen y las preferencias, y recibirá una ruta recomendada
+más alternativas, con geometría GeoJSON, Escape Point, métricas y metadatos de tráfico.
 
 Estos nombres de campo son **compartidos y están congelados** hasta que el equipo acuerde
 un cambio:
@@ -278,8 +273,7 @@ VITE_API_URL=http://host:puerto
 ```
 
 Si la API falla o no hay cobertura para el origen, la interfaz muestra un aviso y no usa
-datos simulados. El cliente descarta los corredores cuyo Escape Point queda a menos de
-1,5 km del origen, para no presentar como “salida” un punto que sigue en el centro urbano.
+datos simulados.
 
 ### Backend
 
@@ -291,49 +285,18 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r backend/requirements.txt
-```
-
-Antes de arrancar la API hay que tener el grafo de OSM cacheado. La primera vez se descarga
-un área de 12 km alrededor de Santiago; después se reutiliza la caché local:
-
-```bash
-cd backend
-python -m app.graph_loader
-cd ..
-```
-
-La caché se guarda en `tmp/osm/` y **no se versiona**. Para una demo sin sorpresas, hay que
-precalentarla en la máquina de presentación con antelación y no depender del wifi del evento.
-
-```bash
 uvicorn app.main:app --reload --app-dir backend
 ```
 
-La API queda en `http://127.0.0.1:8000`. Si no hay caché de grafo, arranca en estado
-`degraded` y `POST /api/escape-routes` responde `503 DATA_NOT_READY`; no intenta una
-descarga larga durante la demo.
-
-### Pruebas
-
-```bash
-.venv\Scripts\python.exe -m pytest -q
-
-cd frontend
-npm run build
-```
-
-Los tests de integración con Santiago se ejecutan si existe la caché de grafo y la capa
-`data/raw/imd_santiago.geojson`. La descarga real de Overpass está desactivada por defecto
-(`RUN_OSM_TESTS=1` para activarla).
+> El backend está en construcción. `requirements.txt` y los módulos de `backend/app/` se
+> completarán durante el hackathon.
 
 ### Datos
 
 Los GeoJSON de Xunta y MITMA ya están versionados en `data/raw/` (conjuntos pequeños).
-La capa unificada `data/raw/imd_santiago.geojson` contiene **39 tramos** y se regenera con
-`python data/build_imd_dataset.py`. El backend la cruza con las aristas de OSM y escribe
-`imd`, `heavy_pct`, `traffic_source`, `traffic_year` y `traffic_confidence` solo cuando hay
-un match geométrico fiable. Los artefactos derivados deben ir a `data/processed/`, que no
-se versiona.
+La capa unificada `data/raw/imd_santiago.geojson` se regenera con
+`python data/build_imd_dataset.py`. Los artefactos derivados deben ir a
+`data/processed/`, que no se versiona.
 
 ---
 
@@ -341,7 +304,7 @@ se versiona.
 
 | Persona | Área | Ámbito |
 |---|---|---|
-| Javi | Frontend | `frontend/`: React, mapa, controles, visualización, métricas |
+| Javier | Frontend | `frontend/`: React, mapa, controles, visualización, métricas |
 | Eva | Datos de tráfico | GeoJSON de Xunta y MITMA, normalización, metadatos, matching |
 | Xián | OSM / routing | Grafo, Road Stress, rutas candidatas, Escape Point, API |
 
@@ -354,10 +317,9 @@ Las reglas de colaboración y los límites de cada área están en [`AGENTS.md`]
 Incluido:
 
 - selección de origen en Santiago de Compostela;
-- selección de origen en Santiago de Compostela;
-- perfil local con velocidad, preferencia de salida y superficie;
+- perfil local con velocidad y preferencia de salida;
 - onboarding, ajustes y vista móvil;
-- hasta 5 corredores en la interfaz (el backend admite hasta 7);
+- entre 3 y 5 corredores candidatos;
 - ruta recomendada + alternativas;
 - Escape Point y métricas;
 - coloreado por Road Stress;
@@ -375,45 +337,43 @@ Fuera de alcance:
 
 ---
 
-## Estado actual
+## Estado del proyecto
 
 | Elemento | Estado |
 |---|---|
-| Estructura del repositorio | Listo |
-| Documentación compartida | Actualizada al estado v0.1; revisión final antes de la demo |
-| Contrato de API | v0.1 implementado y cubierto por tests |
-| Backend | Listo: grafo OSM, matching de tráfico, routing, Escape Point y API |
-| Frontend | MVP con API real, onboarding, ajustes y vista móvil; sin datos de prueba |
-| Datos de tráfico | 39 tramos versionados; matching real sobre la caché de Santiago |
-| Demo | Guion actualizado; pendiente de ensayo final |
+| Estructura del repositorio | Completa |
+| Documentación compartida | Completa |
+| Contrato de API | Integrado |
+| Backend | Funcional |
+| Frontend | Integrado con API real |
+| Onboarding y vista móvil | Implementados |
+| Demo | Presentadada en el hackathon |
 
 ### Próximos pasos
 
-1. Ensayar la demo con [`docs/demo-script.md`](docs/demo-script.md) y grabar el plan B.
-2. Ampliar la cobertura de aforos y revisar los tramos sin match.
-3. Aplicar `surface_preference` en el coste de routing y desacoplar la ciudad de demo.
-4. Mantener `main` en estado demostrable y etiquetar la versión de demo.
+1. Ampliar la cobertura a otras ciudades.
+2. Incorporar nuevas fuentes y aforos más recientes.
+3. Refinar y validar el modelo de Road Stress.
+4. Mejorar la generación y comparación de corredores.
+5. Desplegar públicamente la aplicación
 
 ---
 
 ## Documentación
 
 - [`AGENTS.md`](AGENTS.md): reglas de colaboración, propiedad del código y convenciones.
-- [`docs/api-contract.md`](docs/api-contract.md): contrato HTTP/JSON v0.1 implementado.
+- [`docs/api-contract.md`](docs/api-contract.md): contrato HTTP/JSON.
 - [`docs/data-normalization.md`](docs/data-normalization.md): normalización, confianza y matching de los datos de tráfico.
-- [`docs/demo-script.md`](docs/demo-script.md): guion y plan B para la presentación.
-- [`docs/github-metadata.md`](docs/github-metadata.md): descripción, website y topics del repositorio.
+- [`docs/demo-script.md`](docs/demo-script.md): guion utilizado para preparar la presentación.
 
 ---
 
-## Limitaciones que conviene explicar
+## Limitaciones
 
 - El Road Stress es una **estimación** basada en datos disponibles, no una medida de
   seguridad.
-- La cobertura de aforos es parcial; los tramos sin datos se estiman con OSM y se marcan
-  con menor confianza.
+- La cobertura de aforos es parcial; los tramos sin datos se estiman con OSM y **se marcan
+  con menor confianza**.
 - Los datos de MITMA usados son principalmente de 2022 y los de la Xunta de 2025; la
-  antigüedad se muestra siempre que sea posible.
-- La demo se limita a Santiago de Compostela: el motor acepta coordenadas, pero la caché de
-  grafo y los datos preparados son de Santiago. Un origen fuera de cobertura devuelve
-  `OUTSIDE_COVERAGE`.
+  antigüedad se muestra siempre que es posible.
+- El MVP se limita a Santiago de Compostela, aunque el diseño no dependa de esa ciudad.
