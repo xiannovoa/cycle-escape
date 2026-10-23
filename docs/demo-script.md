@@ -2,11 +2,6 @@
 
 > Documento de trabajo para el equipo. Objetivo: una demo de **3 minutos** que explique el
 > problema, muestre el producto y deje claro qué es una estimación y qué está medido.
-> Proyecto desarrollado para el **Hackathon de la ETSE 2026**.
->
-> **Estado:** guion actualizado a la v0.1. Las cifras de ejemplo corresponden a la caché v2
-> de Santiago, origen en el centro, 22 km/h, aversión alta (0,85) y prioridad 0,65. Si al
-> ensayar cambian, **narrar lo que aparezca en pantalla**, no las cifras de este documento.
 
 ---
 
@@ -38,9 +33,7 @@ Si solo presenta una persona, el guion sigue siendo válido: se narran las tres 
 
 - [ ] Frontend arrancado y probado en el navegador de la demo.
 - [ ] Backend arrancado y `GET /api/health` responde `ok`.
-- [ ] Caché de grafo precalentada en `tmp/osm/` (no depende de Overpass en directo).
 - [ ] Aviso de backend no disponible verificado (sin datos de prueba).
-- [ ] Aviso de “sin datos para esta zona” verificado.
 - [ ] Mapa con teselas cargadas (no depender del wifi del evento).
 - [ ] Capturas o vídeo de respaldo por si falla la red.
 - [ ] Zoom y tamaño de fuente legibles desde la última fila.
@@ -93,10 +86,9 @@ Señalar en pantalla:
    ciudad: es donde empieza una red que se mantiene tranquila los siguientes kilómetros."
 2. **Colores**: "Rojo es estrés alto, naranja medio-alto, amarillo transición y verde
    tranquilidad. El color sale del Road Stress de cada tramo."
-3. **Métricas**: "Unos 7 minutos y 2,5 km hasta el Escape Point. QuietScore 73 después
-   de salir."
-4. **Alternativas**: "Suroeste, sur y noroeste quedan como opciones, pero con más tiempo
-   o más tráfico."
+3. **Métricas**: "13 minutos y 4,8 km hasta el Escape Point. QuietScore 84 después de
+   salir."
+4. **Alternativas**: "Norte y sur quedan como opciones, pero con más tiempo o más tráfico."
 
 > "Fíjate en que no decimos 'seguro' o 'inseguro'. Hablamos de estrés viario y exposición
 > al tráfico. No es un safety score."
@@ -105,9 +97,8 @@ Señalar en pantalla:
 
 **Eva (o Javi):**
 
-> "Debajo de cada corredor mostramos de dónde salen los datos: aforos de la Xunta de
-> 2024–2025, de MITMA de 2022 y tramos estimados con OpenStreetMap. En la ruta recomendada
-> alrededor del 37 % del trazado tiene aforo medido; el resto se estima."
+> "Debajo de cada corredor mostramos de dónde salen los datos: aforos de la Xunta de 2025,
+> de MITMA de 2022 y tramos estimados con OpenStreetMap."
 
 > "La regla más importante: si no hay aforo, no asumimos tráfico cero. Lo marcamos como
 > estimado y bajamos la confianza. Preferimos ser honestos a inventar precisión."
@@ -147,17 +138,16 @@ No. Estimamos estrés viario y exposición al tráfico con datos disponibles. No
 que una carretera sea segura.
 
 **¿De dónde salen los datos?**
-OpenStreetMap para la red; Xunta de Galicia (observaciones de 2016–2025) y MITMA
-(principalmente 2022) para los aforos. La interfaz muestra el año real de cada dato.
+OpenStreetMap para la red; Xunta de Galicia (principalmente 2025) y MITMA (principalmente
+2022) para los aforos.
 
 **¿Qué pasa si una carretera no tiene aforo?**
 Se estima el estrés con atributos OSM, se marca como `osm_estimate` y se muestra con
 confianza baja. No se interpreta como tráfico cero.
 
 **¿Funciona fuera de Santiago?**
-La arquitectura es genérica: el origen y las capas de datos son parámetros. La caché de
-grafo y los datos preparados para la demo se centran en Santiago; un origen fuera de la
-cobertura devuelve `OUTSIDE_COVERAGE`.
+La arquitectura es genérica: el origen y las capas de datos son parámetros. La demo y los
+datos preparados se centran en Santiago.
 
 **¿Por qué no usáis Google Maps?**
 Porque el problema no es llegar a un destino, sino descubrir la mejor salida. Además

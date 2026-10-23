@@ -19,8 +19,8 @@ Cyclout ayuda a un ciclista de carretera que está en una ciudad desconocida a d
 El MVP se demuestra en Santiago de Compostela. La arquitectura no debe quedar hardcodeada
 a esa ciudad más allá de los datos de ejemplo y la configuración de la demo.
 
-Es un hackathon de **un día** (Hackathon de la ETSE 2026). La prioridad es una demo clara y
-fiable, no una arquitectura perfecta.
+Es un hackathon de **un día**. La prioridad es una demo clara y fiable, no una arquitectura
+perfecta.
 
 ---
 
@@ -90,10 +90,9 @@ romper al consumidor.
 - Las distancias van en kilómetros y los tiempos en minutos, tal como indican los nombres.
 - El contrato se versiona con `schema_version` en la respuesta.
 
-El contrato completo, con ejemplos y decisiones cerradas, está en
-[`docs/api-contract.md`](docs/api-contract.md). La v0.1 está implementada en
-`backend/app/models.py` y cubierta por tests; los cambios deben ser aditivos y, a ser
-posible, opcionales para no romper a los consumidores.
+La propuesta completa, con ejemplos y preguntas abiertas, está en
+[`docs/api-contract.md`](docs/api-contract.md). Hasta que Xián la valide, es una propuesta:
+el frontend consume la API con esa forma, pero no debe asumir que es definitiva.
 
 ---
 
@@ -236,45 +235,20 @@ Para considerar una tarea terminada:
 - [ ] Los colores de estrés y la leyenda son coherentes.
 - [ ] Se muestran Escape Time, distancia y QuietScore.
 - [ ] Se muestran fuente, año y confianza de los datos.
-- [ ] `GET /api/health` responde `ok` y la caché de grafo está precalentada.
-- [ ] El frontend responde con un aviso claro si el backend no está disponible.
 - [ ] El aviso de “sin datos para esta zona” está probado.
-- [ ] Hay captura o vídeo de respaldo por si falla la red.
 - [ ] El guion de demo se ha ensayado al menos una vez.
 
 ---
 
-## 13. Decisiones cerradas y pendientes
+## 13. Decisiones abiertas
 
-### Cerradas para v0.1
+Pendientes de validar entre Javi, Eva y Xián:
 
-Implementadas y cubiertas por tests:
-
-- **Endpoint final:** `POST /api/escape-routes`; diagnóstico en `GET /api/health`.
-- **Umbrales de `traffic_confidence`:**
-  - Xunta con año real ≤ 3 años respecto al actual → `high`.
-  - Xunta más antiguo o sin año → `medium`.
-  - MITMA (aforo de 2022 en el MVP) → `medium`.
-  - `osm_estimate` → `low`.
-  - Confianza agregada de ruta: `high` si `measured_share >= 0.75` y todos los tramos
-    medidos son `high`; `low` si no hay ningún tramo medido; `medium` en el resto.
-- **`quiet_score`:** se expone por ruta, calculado sobre la red posterior al Escape
-  Point. El contrato de segmento expone `road_stress`, no `quiet_score` por tramo.
-- **Número de candidatos:** 5 por defecto, máximo 7.
-- **Etiquetas:** el backend compone `label` a partir de la dirección y del nombre del
-  Escape Point. El frontend no recalcula el ranking.
-- **Geocodificación:** en el cliente con Nominatim; el backend solo recibe coordenadas.
-- **Prioridad:** `traffic_lambda` es continuo; `route_preference` se mantiene por
-  compatibilidad con clientes antiguos.
-
-### Pendientes
-
-- Aplicar `surface_preference` como preferencia o filtro de coste en el routing.
-- Unificar la política de confianza: el backend agrega con `measured_share >= 0.75` y
-  todos los tramos `high`; el frontend aplica otra política de presentación (0 % → `low`,
-  hasta 2 % → `medium`, más de 2 % → `high`; PR #9). Debe quedar una sola fuente de verdad.
-- Desacoplar por completo la ciudad de demo y soportar varias cachés de grafo.
-- Ampliar la cobertura de aforos y revisar los umbrales con ciclistas locales.
-- Decidir si `quiet_score` se expone también por segmento.
+- Ruta final del endpoint (`POST /api/escape-routes` es la propuesta actual).
+- Umbrales exactos de `traffic_confidence`.
+- Si `quiet_score` se expone también por segmento o solo por ruta.
+- Número máximo de candidatos devueltos.
+- Si el backend devuelve etiquetas legibles o el frontend las compone.
+- Estrategia de geocodificación (el MVP puede usar solo clic en el mapa y coordenadas).
 
 Cuando se cierre una decisión, actualizar este documento y el contrato en el mismo PR.

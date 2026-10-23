@@ -1,7 +1,7 @@
 # Normalización de datos de tráfico
 
 Documentación del pipeline de datos (responsable: **Eva**). Cubre qué entra, qué sale,
-cómo se normaliza y qué decisiones están cerradas. El contrato de API está en
+cómo se normaliza y qué decisiones quedan abiertas. El contrato de API está en
 [`api-contract.md`](api-contract.md); las reglas de equipo, en [`../AGENTS.md`](../AGENTS.md).
 
 ---
@@ -79,7 +79,7 @@ Xunta: se copia el año real de cada tramo y la confianza se ajusta en consecuen
 
 ---
 
-## 4. Confianza implementada
+## 4. Confianza (propuesta)
 
 | Fuente | Regla | Nivel |
 |---|---|---|
@@ -88,21 +88,8 @@ Xunta: se copia el año real de cada tramo y la confianza se ajusta en consecuen
 | MITMA | Aforo de 2022 | `medium` |
 | OSM (estimado por routing) | Sin medición oficial | `low` |
 
-Un dato **medido** nunca se marca como `low`. Los umbrales están implementados en
-`backend/app/data_loader.py` (`XUNTA_RECENT_YEARS = 3`) y cerrados en `AGENTS.md` §13.
-
-La confianza agregada de una ruta se calcula en `backend/app/main.py` a partir de la
-fracción de distancia con aforo medido:
-
-| Nivel de ruta | Criterio |
-|---|---|
-| `high` | `measured_share >= 0.75` y todos los tramos medidos son `high` |
-| `medium` | Hay algún tramo medido, pero no se cumple `high` |
-| `low` | `measured_share == 0`: toda la ruta es `osm_estimate` |
-
-> El frontend aplica además una política de presentación (PR #7) que puede elevar el
-> nivel mostrado si hay al menos un 30 % de trazado con aforo reciente. Es una
-> inconsistencia conocida y está anotada como pendiente en `AGENTS.md` §13.
+Un dato **medido** nunca se marca como `low`. Los umbrales exactos siguen abiertos en
+`AGENTS.md` §13 y se validarán con Xián y Javi.
 
 ---
 
@@ -123,7 +110,7 @@ Estado actual de la capa: **39 tramos, 0 errores, 0 avisos**.
 
 ---
 
-## 6. Uso desde el backend
+## 6. Uso desde routing (Xián)
 
 ```python
 from app.data_loader import load_traffic_segments, validate_traffic_records, load_traffic_records
@@ -140,21 +127,13 @@ segments = load_traffic_segments()  # GeoDataFrame EPSG:4326
 librería estándar y devuelve dicts con la geometría GeoJSON lista para
 `shapely.geometry.shape`.
 
-El matching está implementado en `backend/app/traffic_enrichment.py`:
-
-1. filtrar por `road_ref` compatible con `ref` de OSM;
-2. exigir una distancia geométrica ≤ 30 m;
-3. no asociar por proximidad sin `ref`: hay calles urbanas pegadas a la N-550;
-4. si varias observaciones compiten por una arista, gana la más cercana, luego la de
-   mayor confianza, luego la más reciente y, por seguridad, la de mayor IMD.
-
-Con la caché v2 de Santiago (11.208 nodos y 25.760 aristas), el matching asocia
-**30 de los 39 tramos** a **1.281 aristas** y **170,9 km** (4,2 % de la red total). Las
-aristas restantes se estiman con OSM y se marcan como `osm_estimate`.
+Sugerencia de matching (la implementación final es de routing): filtrar primero por
+`road_ref` compatible con `ref` de OSM y después aplicar distancia (≤ 30 m). No asociar
+por proximidad sin `ref`: hay calles urbanas pegadas a la N-550.
 
 ---
 
-## 7. Limitaciones y trabajo pendiente
+## 7. Limitaciones y decisiones abiertas
 
 - **N-550 sur** está ~20 % estirada: la geometría MITMA se generó cortando OSM por PK
   con dos puntos de calibración. Los tramos van por la carretera correcta, pero el
@@ -166,9 +145,6 @@ aristas restantes se estiman con OSM y se marcan como `osm_estimate`.
   con la AC-250.
 - **Cobertura parcial**: solo hay aforo para 9 carreteras. El resto de aristas se
   estiman desde atributos OSM en routing (`traffic_source: osm_estimate`), no aquí.
-- **Datos versionados**: `data/raw/` se versiona por tamaño reducido; los artefactos
-  derivados de `data/processed/` no. La regla está recogida en `AGENTS.md` §7, en el
-  README y en `data/raw/README.md`.
-- **Trabajo pendiente**: ampliar la cobertura de aforos, revisar el hueco de la N-550 sur
-  y decidir si se imputa el valor vecino más alto. Cualquier imputación debe marcarse como
-  tal y no presentarse como medición.
+- **Datos versionados**: `data/raw/` se versiona por tamaño reducido, aunque
+  `AGENTS.md` §7 y el README digan lo contrario. Contradicción pendiente de corregir
+  en la documentación compartida.
