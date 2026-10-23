@@ -1,0 +1,26 @@
+# Backend Cycle Escape
+# Requiere Python 3.11+ (probado con 3.12).
+#
+# Windows:
+#   py -3.12 -m venv .venv
+#   .venv\Scripts\python -m pip install -r backend/requirements.txt
+
+# API
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.9,<3.0
+
+# Grafo y routing
+osmnx>=2.0,<3.0
+networkx>=3.3,<4.0
+
+# Datos geoespaciales (geometrías y matching de aforos)
+geopandas>=1.0,<2.0
+shapely>=2.0,<3.0
+pyproj>=3.6,<4.0
+pandas>=2.2,<3.0
+numpy>=1.26,<3.0
+
+# Tests
+pytest>=8.0,<9.0
+httpx>=0.27,<1.0
