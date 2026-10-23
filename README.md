@@ -5,15 +5,19 @@
 > "Estoy en una ciudad que no conozco. ¿Por qué dirección debería salir para alcanzar
 > carreteras tranquilas y con poco tráfico lo antes posible?"
 
+**🥉 3.er puesto — Hackathon ETSE (2026)**
+
 Cyclout es una aplicación web para ciclistas de carretera que visitan una ciudad que
 no conocen. En lugar de pedir un destino, el usuario indica dónde está y cómo le gusta
 rodar. La aplicación analiza la red viaria de alrededor y propone varios **corredores de
 escape** hacia carreteras tranquilas, explicando cuánto tarda en salir de la ciudad y qué
 nivel de tráfico encontrará después.
 
-El MVP y la demo del hackathon se centran en **Santiago de Compostela**, pero la
-arquitectura no está atada a la ciudad: el origen, los datos de tráfico y la red viaria son
-parámetros de entrada.
+El MVP se desarrolló durante el hackathon utilizando **Santiago de Compostela** como ciudad
+de demostración. La arquitectura no está atada a la ciudad: el origen, los datos de tráfico
+y la red viaria son parámetros de entrada.
+
+![Interfaz de Cyclout mostrando corredores de escape en Santiago de Compostela](docs/images/cyclout-demo.png)
 
 ---
 
@@ -48,9 +52,9 @@ Los kilómetros posteriores al Escape Point también deben mantenerse razonablem
 tranquilos. Por eso el punto se valida contra una ventana de red, no contra un único
 segmento.
 
-En el MVP se exige que los siguientes **5 km** mantengan un QuietScore medio de al menos
-**80**, con al menos el **80% del trazado con estrés ≤ 30** y fuera de una zona urbana
-densa.
+En el MVP se exige que el punto esté a **más de 1,5 km del origen** y que los siguientes
+**5 km** mantengan un QuietScore medio de al menos **80**, con al menos el **80% del
+trazado con estrés ≤ 30** y fuera de una zona urbana densa.
 
 ### Escape Time
 
@@ -193,7 +197,7 @@ routing. El significado (rojo = peor) no debe invertirse.
 
 ---
 
-## Stack previsto
+## Stack técnico
 
 | Capa | Tecnología |
 |---|---|
@@ -211,8 +215,8 @@ sin frameworks de estado pesados. Es un hackathon de un día.
 
 ```text
 cycle-escape/
-├── frontend/          # Interfaz React + mapa (Javi)
-├── backend/app/       # FastAPI, OSM/routing, scoring (Xián)
+├── frontend/          # Interfaz React + mapa
+├── backend/app/       # FastAPI, OSM/routing, scoring
 ├── data/
 │   ├── raw/           # GeoJSON de Xunta y MITMA + capa IMD unificada (versionado)
 │   └── processed/     # Datos normalizados y enriquecidos (no versionado)
@@ -271,18 +275,6 @@ VITE_API_URL=http://host:puerto
 Si la API falla o no hay cobertura para el origen, la interfaz muestra un aviso y no usa
 datos simulados.
 
-### Despliegue en Vercel
-
-El frontend se puede publicar en Vercel con una función serverless que hace de proxy
-`/api` hacia el backend público, sin CORS y sin exponer la URL del backend al navegador.
-
-La guía completa está en [`docs/deploy-vercel.md`](docs/deploy-vercel.md). Resumen:
-
-- Vercel aloja **solo el frontend**; el backend debe estar público aparte.
-- Root Directory: `frontend`.
-- Variable de entorno `BACKEND_URL` con la URL base del backend.
-- La configuración está en `frontend/vercel.json` y `frontend/api/[...path].js`.
-
 ### Backend
 
 ```bash
@@ -312,7 +304,7 @@ La capa unificada `data/raw/imd_santiago.geojson` se regenera con
 
 | Persona | Área | Ámbito |
 |---|---|---|
-| Javi | Frontend | `frontend/`: React, mapa, controles, visualización, métricas |
+| Javier | Frontend | `frontend/`: React, mapa, controles, visualización, métricas |
 | Eva | Datos de tráfico | GeoJSON de Xunta y MITMA, normalización, metadatos, matching |
 | Xián | OSM / routing | Grafo, Road Stress, rutas candidatas, Escape Point, API |
 
@@ -345,42 +337,43 @@ Fuera de alcance:
 
 ---
 
-## Estado actual
+## Estado del proyecto
 
 | Elemento | Estado |
 |---|---|
-| Estructura del repositorio | Listo |
-| Documentación compartida | Redactada; pendiente de revisión del equipo |
-| Contrato de API | Propuesta, pendiente de validación |
-| Backend | En integración (rama de routing) |
-| Frontend | MVP con API real; sin datos de prueba |
-| Datos de prueba | Eliminados |
-| Demo | Pendiente de ensayo |
+| Estructura del repositorio | Completa |
+| Documentación compartida | Completa |
+| Contrato de API | Integrado |
+| Backend | Funcional |
+| Frontend | Integrado con API real |
+| Onboarding y vista móvil | Implementados |
+| Demo | Presentadada en el hackathon |
 
 ### Próximos pasos
 
-1. Validar el contrato de API entre los tres desarrolladores.
-2. Implementar el pipeline de datos y el grafo OSM.
-3. Integrar el frontend con la respuesta real del backend.
-4. Ensayar la demo con [`docs/demo-script.md`](docs/demo-script.md).
+1. Ampliar la cobertura a otras ciudades.
+2. Incorporar nuevas fuentes y aforos más recientes.
+3. Refinar y validar el modelo de Road Stress.
+4. Mejorar la generación y comparación de corredores.
+5. Desplegar públicamente la aplicación
 
 ---
 
 ## Documentación
 
 - [`AGENTS.md`](AGENTS.md): reglas de colaboración, propiedad del código y convenciones.
-- [`docs/api-contract.md`](docs/api-contract.md): propuesta de contrato HTTP/JSON.
+- [`docs/api-contract.md`](docs/api-contract.md): contrato HTTP/JSON.
 - [`docs/data-normalization.md`](docs/data-normalization.md): normalización, confianza y matching de los datos de tráfico.
-- [`docs/demo-script.md`](docs/demo-script.md): guion y plan B para la presentación.
+- [`docs/demo-script.md`](docs/demo-script.md): guion utilizado para preparar la presentación.
 
 ---
 
-## Limitaciones que conviene explicar
+## Limitaciones
 
 - El Road Stress es una **estimación** basada en datos disponibles, no una medida de
   seguridad.
-- La cobertura de aforos es parcial; los tramos sin datos se estiman con OSM y se marcan
-  con menor confianza.
+- La cobertura de aforos es parcial; los tramos sin datos se estiman con OSM y **se marcan
+  con menor confianza**.
 - Los datos de MITMA usados son principalmente de 2022 y los de la Xunta de 2025; la
-  antigüedad se muestra siempre que sea posible.
-- La demo se limita a Santiago de Compostela, aunque el diseño no dependa de esa ciudad.
+  antigüedad se muestra siempre que es posible.
+- El MVP se limita a Santiago de Compostela, aunque el diseño no dependa de esa ciudad.
