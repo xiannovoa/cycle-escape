@@ -1,0 +1,29 @@
+{
+  "cache_version": 2,
+  "built_at": "2026-10-22T10:55:22Z",
+  "center": {
+    "lat": 42.8782,
+    "lon": -8.5448
+  },
+  "radius_m": 12000,
+  "network_type": "drive",
+  "summary": {
+    "nodes": 11208,
+    "edges": 25760,
+    "total_length_km": 4113.4,
+    "highways": {
+      "living_street": 837,
+      "primary": 1196,
+      "primary_link": 108,
+      "residential": 8434,
+      "secondary": 533,
+      "secondary_link": 2,
+      "tertiary": 2894,
+      "tertiary_link": 100,
+      "trunk": 844,
+      "trunk_link": 237,
+      "unclassified": 10575
+    },
+    "crs": "epsg:4326"
+  }
+}
